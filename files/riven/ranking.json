@@ -1,0 +1,18 @@
+{
+  "settings": {
+    "resolutions": {"r2160p": true, "r1080p": true, "r720p": true, "r480p": false, "r360p": false, "unknown": false},
+    "options": {"removeAllTrash": true, "removeRanksUnder": -5000, "removeAdultContent": true, "titleSimilarity": 0.85},
+    "languages": {"preferred": ["en"]}
+  },
+  "rankingModel": {
+    "remux": 3000, "bluray": 800, "webdl": 200, "web": 100,
+    "hevc": 500, "av1": 400, "avc": 300,
+    "hdtv": -5000, "uhdrip": -500, "bdrip": -2000, "webrip": -1000, "brrip": -10000, "hdrip": -10000, "dvdrip": -10000,
+    "dolbyVision": 4000, "hdr10plus": 3000, "hdr": 2500, "bit10": 200, "sdr": -2000,
+    "truehd": 3000, "atmos": 2500, "dtsLossless": 2500, "flac": 500, "dolbyDigitalPlus": 300, "dtsLossy": 200,
+    "surround": 100, "dolbyDigital": 100, "aac": -200, "stereo": -500,
+    "edition": 200, "proper": 50, "repack": 50,
+    "dubbed": -2000, "hardcoded": -2000, "converted": -5000, "upscaled": -10000, "threeD": -10000,
+    "cam": -10000, "telesync": -10000, "telecine": -10000, "screener": -10000, "r5": -10000
+  }
+}

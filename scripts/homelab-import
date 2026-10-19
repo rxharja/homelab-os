@@ -1,0 +1,40 @@
+#!/usr/bin/bash
+# One-time migration: load the tarball made by export-devbox.sh on the Pop!_OS box.
+#   sudo homelab-import homelab-export.tar.zst
+set -euo pipefail
+TAR=${1:?usage: homelab-import <homelab-export.tar.zst>}
+set -a; . /etc/homelab/homelab.env; set +a
+APP=/var/lib/homelab/appdata
+WORK=$(mktemp -d /var/tmp/homelab-import.XXXX)
+
+tar --zstd -xf "$TAR" -C "$WORK"
+OLD_IP=$(cat "$WORK/meta/lan_ip" 2>/dev/null || true)
+
+systemctl stop caddy open-webui seerr jellyfin riven zurg-mount zurg adguard 2>/dev/null || true
+
+for d in adguard caddy jellyfin seerr open-webui; do
+  [[ -d $WORK/appdata/$d ]] || continue
+  echo "importing $d"
+  rm -rf "${APP:?}/$d"; mkdir -p "$APP/$d"
+  cp -a "$WORK/appdata/$d/." "$APP/$d/"
+done
+# Jellyfin runs as root without a userns here; UserNS=auto + :U re-chowns the rest.
+chown -R root:root "$APP/jellyfin"
+
+# AdGuard rewrites pointed at the dev box: repoint them at this box.
+if [[ -n $OLD_IP && $OLD_IP != "$LAN_IP" && -f $APP/adguard/conf/AdGuardHome.yaml ]]; then
+  sed -i "s/\b${OLD_IP//./\\.}\b/${LAN_IP}/g" "$APP/adguard/conf/AdGuardHome.yaml"
+  echo "AdGuard rewrites: $OLD_IP -> $LAN_IP"
+fi
+
+if [[ -f $WORK/riven.sql ]]; then
+  homelab-load-db "$WORK/riven.sql"
+  cp "$WORK/riven.sql" "$APP/_dumps/riven.sql"
+fi
+[[ -f $WORK/riven.env.devbox ]] && install -m 600 "$WORK/riven.env.devbox" /etc/homelab/riven.env.devbox \
+  && echo "dev box .env.riven saved to /etc/homelab/riven.env.devbox: copy COMET lines into riven.extra.env"
+
+rm -rf "$WORK"
+systemctl restart homelab-render.service
+systemctl start adguard caddy zurg zurg-mount riven jellyfin seerr open-webui
+echo "import done: check 'homelab-status'"

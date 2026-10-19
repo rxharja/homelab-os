@@ -1,0 +1,16 @@
+# bootc-image-builder config for the installer ISO (anaconda-iso).
+# Users go in the kickstart: bib won't combine [[customizations.user]] with a kickstart.
+[customizations.installer.kickstart]
+contents = """
+text --non-interactive
+# Whole-disk install on the mini PC's NVMe. WIPES IT.
+zerombr
+clearpart --all --initlabel --disklabel=gpt
+autopart --nohome --noswap --type=plain
+network --bootproto=dhcp --device=link --activate --onboot=on --hostname=homelab
+timezone America/New_York --utc
+rootpw --lock
+user --name=redon --groups=wheel
+sshkey --username=redon "ssh-ed25519 AAAA...replace-with-your-public-key"
+reboot --eject
+"""

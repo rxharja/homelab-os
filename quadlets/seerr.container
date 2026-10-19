@@ -1,0 +1,18 @@
+[Unit]
+Description=Seerr (requests / discovery)
+After=homelab-render.service jellyfin.service
+Requires=homelab-render.service
+
+[Container]
+Image=ghcr.io/seerr-team/seerr:latest
+AutoUpdate=registry
+ContainerName=seerr
+Network=homelab.network
+UserNS=auto
+Volume=/var/lib/homelab/appdata/seerr:/app/config:Z,U
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

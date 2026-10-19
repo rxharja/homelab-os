@@ -1,0 +1,23 @@
+[Unit]
+Description=AdGuard Home (LAN DNS + ad blocking)
+After=homelab-render.service
+Requires=homelab-render.service
+
+[Container]
+Image=docker.io/adguard/adguardhome:latest
+AutoUpdate=registry
+ContainerName=adguard
+Network=homelab.network
+UserNS=auto
+# DNS for the whole LAN. Admin UI: https://adguard.DOMAIN via Caddy, or LAN_IP:3001 for the first-run wizard.
+PublishPort=53:53/tcp
+PublishPort=53:53/udp
+PublishPort=3001:3000/tcp
+Volume=/var/lib/homelab/appdata/adguard/work:/opt/adguardhome/work:Z,U
+Volume=/var/lib/homelab/appdata/adguard/conf:/opt/adguardhome/conf:Z,U
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

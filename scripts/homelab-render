@@ -1,0 +1,90 @@
+#!/usr/bin/bash
+# Turn /etc/homelab/{homelab,secrets}.env into running config.
+# Idempotent: runs on every boot, safe to re-run by hand (then restart services).
+set -euo pipefail
+
+ETC=/etc/homelab
+SHARE=/usr/share/homelab
+VAR=/var/lib/homelab
+CFG=$VAR/config
+APP=$VAR/appdata
+
+log() { echo "homelab-render: $*"; }
+die() { echo "homelab-render: ERROR: $*" >&2; exit 1; }
+
+[[ -r $ETC/homelab.env ]] || die "missing $ETC/homelab.env (copy from $SHARE/examples/)"
+[[ -r $ETC/secrets.env ]] || die "missing $ETC/secrets.env (copy from $SHARE/examples/)"
+[[ $(stat -c %a "$ETC/secrets.env") == 600 ]] || { chmod 600 "$ETC/secrets.env"; log "fixed secrets.env mode to 600"; }
+
+set -a
+# shellcheck source=/dev/null
+. "$ETC/homelab.env"
+# shellcheck source=/dev/null
+. "$ETC/secrets.env"
+set +a
+
+for v in DOMAIN LAN_IP ACME_EMAIL CF_API_TOKEN RD_TOKEN TMDB_API_KEY RIVEN_DB_PASSWORD; do
+  [[ -n ${!v:-} ]] || die "$v is not set"
+done
+# Filled in after first boot (generated inside the Seerr / Jellyfin UIs).
+SEERR_API_KEY=${SEERR_API_KEY:-}
+JELLYFIN_API_KEY=${JELLYFIN_API_KEY:-}
+RIVEN_PLUGINS=${RIVEN_PLUGINS:-[\"seerr\",\"stremthru\",\"torrentio\",\"comet\",\"jellyfin\"]}
+export SEERR_API_KEY JELLYFIN_API_KEY RIVEN_PLUGINS
+
+# --- directories --------------------------------------------------------------
+mkdir -p "$CFG"/{caddy,zurg,riven} \
+         "$APP"/{adguard/work,adguard/conf,caddy/data,caddy/config,jellyfin/config,jellyfin/cache} \
+         "$APP"/{seerr,open-webui,ollama,zurg/data,riven/data,riven/logs,riven/db,riven/redis,_dumps} \
+         /var/mnt/media/{riven,zurg}
+# Riven runs as UID/GID 1000 inside its container, with no user namespace.
+chown 1000:1000 "$APP/riven/data" "$APP/riven/logs"
+
+# --- templates (explicit variable list so stray $ in files survive) -------------
+VARS='${DOMAIN} ${LAN_IP} ${ACME_EMAIL} ${RD_TOKEN} ${TMDB_API_KEY} ${RIVEN_DB_PASSWORD} ${SEERR_API_KEY} ${JELLYFIN_API_KEY} ${RIVEN_PLUGINS}'
+render() { # template dest mode
+  local tmp; tmp=$(mktemp)
+  envsubst "$VARS" <"$SHARE/templates/$1" >"$tmp"
+  install -m "$3" "$tmp" "$2"; rm -f "$tmp"
+}
+render Caddyfile        "$CFG/caddy/Caddyfile"   0644
+render zurg-config.yml  "$CFG/zurg/config.yml"   0600
+render riven.env        "$CFG/riven/riven.env"   0600
+render open-webui.env   "$CFG/open-webui.env"    0600
+[[ -r $ETC/riven.extra.env ]] && cat "$ETC/riven.extra.env" >>"$CFG/riven/riven.env"
+[[ -n $SEERR_API_KEY && -n $JELLYFIN_API_KEY ]] || \
+  log "NOTE: SEERR_API_KEY / JELLYFIN_API_KEY empty: Riven won't see requests until you add them (docs/first-boot.md)"
+
+# Ranking is config-as-code: the image copy wins unless /etc overrides it.
+if [[ -r $ETC/ranking.json ]]; then src=$ETC/ranking.json; else src=$SHARE/files/riven/ranking.json; fi
+install -m 0644 -o 1000 -g 1000 "$src" "$APP/riven/data/ranking.json"
+
+# --- podman secrets ------------------------------------------------------------
+printf %s "$CF_API_TOKEN"      | podman secret create --replace cf_api_token - >/dev/null
+printf %s "$RIVEN_DB_PASSWORD" | podman secret create --replace riven_db_pw  - >/dev/null
+
+# --- cockpit behind Caddy ---------------------------------------------------------
+mkdir -p /etc/cockpit
+cat >/etc/cockpit/cockpit.conf <<CONF
+[WebService]
+Origins = https://cockpit.${DOMAIN} wss://cockpit.${DOMAIN} https://${LAN_IP}:9090
+ProtocolHeader = X-Forwarded-Proto
+CONF
+
+# --- firewall (host services; podman manages its own published ports) ------------
+if systemctl -q is-active firewalld; then
+  for s in ssh dns http https cockpit; do firewall-cmd -q --permanent --add-service="$s" || true; done
+  firewall-cmd -q --permanent --add-port=8096/tcp --add-port=11434/tcp || true
+  firewall-cmd -q --reload || true
+fi
+
+# --- tailscale -------------------------------------------------------------------
+if [[ -n ${TS_AUTHKEY:-} ]] && command -v tailscale >/dev/null; then
+  if ! tailscale status >/dev/null 2>&1; then
+    log "joining tailnet"
+    tailscale up --authkey="$TS_AUTHKEY" --hostname="${TS_HOSTNAME:-homelab}" \
+      ${TS_ADVERTISE_ROUTES:+--advertise-routes="$TS_ADVERTISE_ROUTES"} || log "tailscale up failed (non-fatal)"
+  fi
+fi
+
+log "done"

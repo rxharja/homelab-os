@@ -1,0 +1,24 @@
+[Unit]
+Description=PostgreSQL for Riven
+After=homelab-render.service
+Requires=homelab-render.service
+
+[Container]
+Image=docker.io/library/postgres:17-alpine
+AutoUpdate=registry
+ContainerName=riven-db
+Network=homelab.network
+UserNS=auto
+Environment=POSTGRES_USER=riven
+Environment=POSTGRES_DB=riven
+Secret=riven_db_pw,type=env,target=POSTGRES_PASSWORD
+Volume=/var/lib/homelab/appdata/riven/db:/var/lib/postgresql/data:Z,U
+HealthCmd=pg_isready -U riven
+HealthInterval=10s
+Notify=healthy
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

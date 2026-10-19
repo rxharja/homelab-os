@@ -1,0 +1,11 @@
+#!/usr/bin/bash
+# Wipe riven-db's data dir and load a pg_dump into a fresh database.
+set -euo pipefail
+DUMP=${1:?usage: homelab-load-db <dump.sql>}
+[[ -r $DUMP ]] || { echo "no dump at $DUMP"; exit 1; }
+systemctl stop riven.service riven-db.service || true
+rm -rf /var/lib/homelab/appdata/riven/db
+mkdir -p /var/lib/homelab/appdata/riven/db
+systemctl start riven-db.service        # Notify=healthy: returns once pg is ready
+podman exec -i riven-db psql -q -v ON_ERROR_STOP=1 -U riven -d riven <"$DUMP"
+echo "riven-db loaded from $DUMP"

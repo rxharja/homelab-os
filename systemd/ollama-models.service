@@ -1,0 +1,13 @@
+[Unit]
+Description=Pull the Ollama models listed in OLLAMA_MODELS
+Requires=ollama.service
+After=ollama.service network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/homelab/homelab.env
+ExecStart=/bin/sh -c 'for m in $OLLAMA_MODELS; do podman exec ollama ollama pull "$m" || echo "pull failed: $m"; done'
+TimeoutStartSec=2h
+
+[Install]
+WantedBy=multi-user.target

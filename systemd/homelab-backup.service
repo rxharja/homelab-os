@@ -1,0 +1,11 @@
+[Unit]
+Description=Restic backup of homelab state
+Wants=network-online.target
+After=network-online.target riven-db.service
+ConditionPathExists=/etc/homelab/secrets.env
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/homelab-backup
+Nice=10
+IOSchedulingClass=idle

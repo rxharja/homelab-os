@@ -1,0 +1,20 @@
+[Unit]
+Description=Open WebUI (chat front end for Ollama)
+After=homelab-render.service ollama.service
+Wants=ollama.service
+
+[Container]
+Image=ghcr.io/open-webui/open-webui:main
+AutoUpdate=registry
+ContainerName=open-webui
+Network=homelab.network
+UserNS=auto
+Environment=OLLAMA_BASE_URL=http://ollama:11434
+EnvironmentFile=/var/lib/homelab/config/open-webui.env
+Volume=/var/lib/homelab/appdata/open-webui:/app/backend/data:Z,U
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

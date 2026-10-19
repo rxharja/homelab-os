@@ -1,0 +1,23 @@
+#!/usr/bin/bash
+# Restore app state from restic onto a freshly installed box.
+#   sudo homelab-restore [snapshot-id]   (default: latest)
+# Prereq: /etc/homelab/secrets.env holds RESTIC_REPOSITORY + RESTIC_PASSWORD.
+set -euo pipefail
+SNAP=${1:-latest}
+set -a; . /etc/homelab/secrets.env; set +a
+APP=/var/lib/homelab/appdata
+SERVICES=(caddy open-webui seerr jellyfin riven zurg-mount zurg riven-redis riven-db adguard)
+
+read -rp "This overwrites $APP with snapshot '$SNAP'. Type yes: " ok
+[[ $ok == yes ]] || exit 1
+
+systemctl stop "${SERVICES[@]/%/.service}" || true
+# /etc/homelab from the snapshot goes aside for comparison; your current one stays.
+restic restore "$SNAP" --target /var/tmp/homelab-restore --include /etc/homelab
+restic restore "$SNAP" --target / --include "$APP"
+echo "Snapshot's /etc/homelab is in /var/tmp/homelab-restore/etc/homelab (diff it against yours)."
+
+homelab-load-db "$APP/_dumps/riven.sql"
+systemctl start homelab-render.service
+systemctl start "${SERVICES[@]/%/.service}"
+echo "restore complete"

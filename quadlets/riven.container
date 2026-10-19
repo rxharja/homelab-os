@@ -1,0 +1,35 @@
+# Riven runs ROOTFUL with no user namespace: its FUSE mount (RivenVFS) must
+# propagate out to the host and on into Jellyfin. That needs SYS_ADMIN,
+# /dev/fuse and an rshared bind of the host mount point.
+[Unit]
+Description=Riven (requests -> scrape -> Real-Debrid -> VFS)
+Requires=homelab-media-mount.service homelab-render.service riven-db.service riven-redis.service
+After=homelab-media-mount.service homelab-render.service riven-db.service riven-redis.service seerr.service
+
+[Container]
+Image=ghcr.io/rivenmedia/riven-ts:main
+AutoUpdate=registry
+ContainerName=riven
+Network=homelab.network
+AddCapability=SYS_ADMIN
+AddDevice=/dev/fuse
+SecurityLabelDisable=true
+PodmanArgs=--tty
+EnvironmentFile=/var/lib/homelab/config/riven/riven.env
+Volume=/var/lib/homelab/appdata/riven/data:/app/data
+Volume=/var/lib/homelab/appdata/riven/logs:/app/logs
+Volume=/var/mnt/media/riven:/mount:rshared
+# GraphQL API (for the Riven TUI). Localhost only.
+PublishPort=127.0.0.1:3000:3000
+
+[Service]
+Restart=always
+# Clear a stale FUSE mount left by a crash, or the readiness check below lies.
+ExecStartPre=-/usr/bin/umount -l /var/mnt/media/riven
+# Report "started" only once the VFS is actually visible on the host,
+# so Jellyfin never starts against an empty folder.
+ExecStartPost=/bin/sh -c 'for i in $$(seq 1 90); do mountpoint -q /var/mnt/media/riven && exit 0; sleep 1; done; exit 1'
+ExecStopPost=-/usr/bin/umount -l /var/mnt/media/riven
+
+[Install]
+WantedBy=multi-user.target

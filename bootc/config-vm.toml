@@ -1,0 +1,5 @@
+# bootc-image-builder config for qcow2 (VM dry run). No kickstart here.
+[[customizations.user]]
+name = "redon"
+key = "ssh-ed25519 AAAA...replace-with-your-public-key"
+groups = ["wheel"]

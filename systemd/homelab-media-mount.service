@@ -1,0 +1,15 @@
+[Unit]
+Description=Make /var/mnt/media a shared mount (FUSE mounts propagate into Jellyfin)
+DefaultDependencies=no
+After=local-fs.target
+Before=riven.service jellyfin.service zurg-mount.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/mkdir -p /var/mnt/media/riven /var/mnt/media/zurg
+ExecStart=/bin/sh -c 'mountpoint -q /var/mnt/media || mount --bind /var/mnt/media /var/mnt/media'
+ExecStart=/usr/bin/mount --make-rshared /var/mnt/media
+
+[Install]
+WantedBy=multi-user.target

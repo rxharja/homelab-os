@@ -1,0 +1,8 @@
+#!/usr/bin/bash
+# Quick health view.
+units=(homelab-render homelab-media-mount adguard caddy zurg zurg-mount riven-db riven-redis riven jellyfin seerr ollama open-webui tailscaled)
+printf '%-22s %s\n' UNIT STATE
+for u in "${units[@]}"; do printf '%-22s %s\n' "$u" "$(systemctl is-active "$u.service" 2>/dev/null)"; done
+echo
+echo "mounts:"; findmnt -rn -o TARGET,FSTYPE,PROPAGATION /var/mnt/media /var/mnt/media/riven /var/mnt/media/zurg 2>/dev/null || true
+echo; echo "image:"; bootc status --format=humanreadable 2>/dev/null | sed -n '1,8p' || true

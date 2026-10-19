@@ -1,0 +1,21 @@
+# Rendered by homelab-render. Contains your Real-Debrid token: lives only in
+# /var/lib/homelab/config/zurg/config.yml (mode 600), never in the image.
+zurg: v1
+token: ${RD_TOKEN}
+port: 9999
+check_for_changes_every_secs: 10
+enable_repair: false
+auto_delete_rar_torrents: true
+
+directories:
+  shows:
+    group_order: 10
+    group: media
+    filters:
+      - has_episodes: true
+  movies:
+    group_order: 20
+    group: media
+    only_show_the_biggest_file: true
+    filters:
+      - regex: /.*/

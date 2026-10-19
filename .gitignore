@@ -1,0 +1,7 @@
+# Real config/secrets never live in this repo.
+secrets.env
+*.secrets.env
+riven.extra.env
+!examples/*
+homelab-export.tar.zst
+output/

@@ -1,0 +1,26 @@
+# Local LLM server on the Radeon 680M (gfx1035) via ROCm.
+# HSA_OVERRIDE_GFX_VERSION makes ROCm treat the 680M as a supported RDNA2 part.
+# VERIFY ON HARDWARE. Fallback: llama.cpp's Vulkan server (see docs/operations.md).
+[Unit]
+Description=Ollama (local LLM)
+After=homelab-render.service
+
+[Container]
+Image=docker.io/ollama/ollama:rocm
+AutoUpdate=registry
+ContainerName=ollama
+Network=homelab.network
+AddDevice=/dev/kfd
+AddDevice=/dev/dri
+SecurityLabelDisable=true
+Environment=HSA_OVERRIDE_GFX_VERSION=10.3.0
+Environment=OLLAMA_KEEP_ALIVE=30m
+# LAN-exposed WITHOUT auth so Neptune can use it. Keep firewalld scoped to your LAN.
+PublishPort=11434:11434
+Volume=/var/lib/homelab/appdata/ollama:/root/.ollama
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

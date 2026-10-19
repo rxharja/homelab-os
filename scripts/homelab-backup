@@ -1,0 +1,32 @@
+#!/usr/bin/bash
+# Nightly restic backup: Postgres dump + app state + /etc/homelab.
+# Skips what's re-creatable: Jellyfin cache, raw DB/Redis files, Ollama models.
+set -euo pipefail
+set -a; . /etc/homelab/homelab.env; . /etc/homelab/secrets.env; set +a
+: "${RESTIC_REPOSITORY:?set RESTIC_REPOSITORY in secrets.env}"
+: "${RESTIC_PASSWORD:?set RESTIC_PASSWORD in secrets.env}"
+
+APP=/var/lib/homelab/appdata
+restic cat config >/dev/null 2>&1 || restic init
+
+echo "dumping riven-db"
+podman exec riven-db pg_dump -U riven --clean --if-exists --no-owner riven >"$APP/_dumps/riven.sql.tmp"
+mv "$APP/_dumps/riven.sql.tmp" "$APP/_dumps/riven.sql"
+
+# SQLite apps: stop briefly for a consistent copy, always restart.
+SQLITE_APPS=(seerr jellyfin open-webui)
+restart() { systemctl start "${SQLITE_APPS[@]/%/.service}" || true; }
+trap restart EXIT
+systemctl stop "${SQLITE_APPS[@]/%/.service}"
+
+restic backup --tag homelab --host "${TS_HOSTNAME:-homelab}" \
+  /etc/homelab "$APP" \
+  --exclude "$APP/jellyfin/cache" \
+  --exclude "$APP/riven/db" \
+  --exclude "$APP/riven/redis" \
+  --exclude "$APP/ollama" \
+  --exclude "$APP/riven/logs"
+
+restart; trap - EXIT
+restic forget --tag homelab --keep-daily 7 --keep-weekly 4 --keep-monthly 6 --prune
+restic check --read-data-subset=2% || echo "WARNING: restic check reported problems"
