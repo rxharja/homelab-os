@@ -1,5 +1,10 @@
 # bootc-image-builder config for qcow2 (VM dry run). No kickstart here.
 [[customizations.user]]
-name = "redon"
-key = "ssh-ed25519 AAAA...replace-with-your-public-key"
+name = "homelab"
+key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCo2qxeLS2alunNMN2PCACR23x2rDOP0PzeKv1EI0o6C7WiJ4tWvLqaXcutnC8Brcw7ppKP7n59ZPvkkrYPNU3n5/bKyabz+Nlx81fvZ9mSNW9c3qya+/FdBzYKfV2u3ofeLeEF5i4EnYS/xMjHY8KdRBq1M3alFtFN5f51cH0i22p2DAKNMzlWcXT7Z4wSRYGs1GvFpt8yg0/NJiNbXymcrkvQp1m/nbNmVWzGibamZWkvr5ndJA/v1zUOvv5LownTUj7vwVK+/Y3syHV6dgIfaQF/Xouay/uK3FEyEo9jw00DxzLfiQEKEzgVy8l4Jo/R1cdEeWX0pGekTFQ6nE9okYmvYPoH1NkiqJThBWQL0U1HJO0FbpUZ9+PuwO/Q5a6cbjjSD/KAl4S24S0CHx25nHfLXx5rmAbXOcsgG4FgxjFRZsoNH85WXPvLqRnUoKrdshvCnsDtFCj07Ulz139c59q7vxMXaB4H9zGVoVcPUIvStaRR1cUw0Quo5vCb+OM= redonxharja@pop-os"
 groups = ["wheel"]
+
+# Room for the OS plus all bound container images (Ollama ROCm alone is several GB).
+[[customizations.filesystem]]
+mountpoint = "/"
+minsize = "60 GiB"

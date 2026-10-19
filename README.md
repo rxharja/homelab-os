@@ -1,6 +1,6 @@
 # homelab-os
 
-The whole home server as **one bootable container image** (Fedora bootc).
+This repo defines the entire whole home server as **one bootable container image** (Fedora bootc).
 Build it in CI, install it once, and the box configures itself on every boot from
 two small files in `/etc/homelab/`. OS + containers update together, and
 `bootc rollback` undoes a bad update.
@@ -9,8 +9,8 @@ two small files in `/etc/homelab/`. OS + containers update together, and
 git push ──► GitHub Actions ──► ghcr.io/<you>/homelab-os:latest
                                          │  bootc upgrade (weekly, auto)
                                          ▼
-                    Beelink SER5 MAX  ── /etc/homelab/*.env (yours, never in git)
-                                       └ /var/lib/homelab   (state, backed up by restic)
+                    Server Hardware / VM  ── /etc/homelab/*.env (yours, never in git)
+                                           └ /var/lib/homelab   (state, backed up by restic)
 ```
 
 ## What's inside

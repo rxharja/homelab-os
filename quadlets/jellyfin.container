@@ -12,7 +12,7 @@ AutoUpdate=registry
 ContainerName=jellyfin
 Network=homelab.network
 SecurityLabelDisable=true
-AddDevice=/dev/dri
+AddDevice=-/dev/dri
 # Direct LAN access for apps that want ip:port (Neptune, Infuse). Caddy also proxies it.
 PublishPort=8096:8096
 Volume=/var/lib/homelab/appdata/jellyfin/config:/config

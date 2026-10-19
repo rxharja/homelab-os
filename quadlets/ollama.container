@@ -10,8 +10,8 @@ Image=docker.io/ollama/ollama:rocm
 AutoUpdate=registry
 ContainerName=ollama
 Network=homelab.network
-AddDevice=/dev/kfd
-AddDevice=/dev/dri
+AddDevice=-/dev/kfd
+AddDevice=-/dev/dri
 SecurityLabelDisable=true
 Environment=HSA_OVERRIDE_GFX_VERSION=10.3.0
 Environment=OLLAMA_KEEP_ALIVE=30m
