@@ -4,16 +4,26 @@
 
 | Layer | Where | Mutable? | Source of truth |
 |---|---|---|---|
-| OS + packages + Quadlets + templates | `/usr` | No (image) | this repo |
-| Machine config + secrets | `/etc/homelab` | Yes | you (back it up) |
-| Rendered config | `/var/lib/homelab/config` | regenerated every boot | templates + `/etc/homelab` |
+| OS, packages, Quadlets, host units, Caddyfile, tmpfiles/sysctl drop-ins | `/usr` (from `rootfs/`) | No (image) | this repo |
+| Config defaults (`ranking.json`) | `/etc/homelab` | Yes; 3-way merged on upgrade | this repo, then you |
+| Machine config + secrets | `/etc/homelab/*.env` | Yes | you (back it up) |
+| Rendered config: only files embedding a secret | `/var/lib/homelab/config` | regenerated every boot | templates + `/etc/homelab` |
 | App state | `/var/lib/homelab/appdata` | Yes | restic |
 | Media | `/var/mnt/media/{riven,zurg}` | FUSE, virtual | Real-Debrid |
 
-Nothing secret is in the image or git. `homelab-render.service` runs before every
-container and re-creates rendered config, Podman secrets, Cockpit origins, firewall
-rules and the Tailscale login. Edit `/etc/homelab/*`, run
-`sudo systemctl restart homelab-render <app>`, and the change is applied.
+Everything that can be static is static. Directories come from
+`tmpfiles.d/homelab.conf`, firewall rules are baked in at build time with
+`firewall-offline-cmd`, and Caddy expands `{$DOMAIN}` / `{$ACME_EMAIL}` itself from
+`/etc/homelab/homelab.env`. That leaves `homelab-render.service` four jobs: render
+`riven.env` (its DB URL holds the password) and zurg's `config.yml` (the RD token),
+create the `cf_api_token` / `riven_db_pw` Podman secrets, and join the tailnet.
+
+Nothing secret is in the image or git. Every container has
+`Requires=homelab-render.service`, and render has no `ConditionPathExists`, so on a
+box with no `/etc/homelab/*.env` it *fails* and the containers stay down rather than
+starting half-configured. (A skipped unit would still satisfy `Requires=`.)
+Edit `/etc/homelab/*`, run `sudo systemctl restart homelab-render <app>`, and the
+change is applied.
 
 ## Request → playback flow
 
@@ -41,9 +51,13 @@ Zurg + rclone does the same for everything in your RD account (DMM hand-picks) a
 
 ## Networking and exposure
 
-* Only DNS (53), HTTP/S (80/443), Jellyfin (8096), Ollama (11434) and the AdGuard UI (3001) are LAN-published.
-  Seerr, Open WebUI and AdGuard's UI go through Caddy. Postgres, Redis, Zurg and Riven's API
-  stay on the internal network or localhost.
+* Only DNS (53), HTTP/S (80/443), Jellyfin (8096), Ollama (11434), the AdGuard UI (3001) and
+  Cockpit (9090) are LAN-published. Seerr, Open WebUI and AdGuard's UI also go through Caddy.
+  Postgres, Redis, Zurg and Riven's API stay on the internal network or localhost.
+* **Cockpit is not proxied.** Reaching it at `https://LAN_IP:9090` (self-signed cert) keeps the
+  admin UI working when the container stack isn't, and avoids the one file that would have to
+  stay machine-specific: Cockpit's `Origins` list takes no wildcards, so a `cockpit.DOMAIN`
+  vhost means rendering `/etc/cockpit/cockpit.conf` per box. Remotely, reach it over Tailscale.
 * **Ollama has no auth.** It is LAN-only by design. Never port-forward it.
 * No router port forwards at all. Remote access goes through Tailscale; DNS-01 certs don't need inbound ports.
 * Rootful Podman's published ports are handled by netavark's own nftables rules, so firewalld

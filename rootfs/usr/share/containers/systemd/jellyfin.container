@@ -3,8 +3,9 @@
 # root-owned FUSE mounts across a userns is unreliable.
 [Unit]
 Description=Jellyfin
+Requires=homelab-render.service
 Wants=riven.service zurg-mount.service
-After=homelab-media-mount.service riven.service zurg-mount.service
+After=homelab-render.service homelab-media-mount.service riven.service zurg-mount.service
 
 [Container]
 Image=docker.io/jellyfin/jellyfin:latest
@@ -12,7 +13,9 @@ AutoUpdate=registry
 ContainerName=jellyfin
 Network=homelab.network
 SecurityLabelDisable=true
+# "-" = optional, so the unit still starts in a VM with no GPU.
 AddDevice=-/dev/dri
+AddDevice=-/dev/kfd
 # Direct LAN access for apps that want ip:port (Neptune, Infuse). Caddy also proxies it.
 PublishPort=8096:8096
 Volume=/var/lib/homelab/appdata/jellyfin/config:/config

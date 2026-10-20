@@ -1,5 +1,7 @@
 [Unit]
 Description=Redis for Riven
+After=homelab-render.service
+Requires=homelab-render.service
 
 [Container]
 Image=docker.io/library/redis:8-alpine

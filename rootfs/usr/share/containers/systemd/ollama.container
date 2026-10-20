@@ -4,14 +4,16 @@
 [Unit]
 Description=Ollama (local LLM)
 After=homelab-render.service
+Requires=homelab-render.service
 
 [Container]
 Image=docker.io/ollama/ollama:rocm
 AutoUpdate=registry
 ContainerName=ollama
 Network=homelab.network
-AddDevice=-/dev/kfd
+# "-" = optional, so the unit still starts in a VM with no GPU.
 AddDevice=-/dev/dri
+AddDevice=-/dev/kfd
 SecurityLabelDisable=true
 Environment=HSA_OVERRIDE_GFX_VERSION=10.3.0
 Environment=OLLAMA_KEEP_ALIVE=30m

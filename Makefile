@@ -28,7 +28,7 @@ qcow2: build      ## VM disk for a dry run in virt-manager/GNOME Boxes
 	  --type qcow2 --rootfs xfs --local $(IMAGE)
 
 lint:
-	shellcheck -S warning scripts/*
-	python3 -m json.tool files/riven/ranking.json >/dev/null
+	shellcheck -S warning rootfs/usr/bin/homelab-* scripts/export-devbox.sh
+	python3 -m json.tool rootfs/etc/homelab/ranking.json >/dev/null
 
 .PHONY: build caddy iso qcow2 lint

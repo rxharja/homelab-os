@@ -1,0 +1,48 @@
+# Static: shipped in the image at /usr/share/homelab/Caddyfile and mounted
+# read-only into the container. DOMAIN and ACME_EMAIL come from
+# /etc/homelab/homelab.env via EnvironmentFile and are expanded by Caddy's own
+# {$VAR} placeholders; CF_API_TOKEN arrives as a Podman secret.
+#
+# One wildcard cert (*.{$DOMAIN}) via Cloudflare DNS-01. Nothing here needs
+# port-forwarding: DNS-01 works with a LAN-only box.
+#
+# Cockpit is NOT proxied: reach it directly at https://LAN_IP:9090.
+{
+	email {$ACME_EMAIL}
+}
+
+*.{$DOMAIN}, {$DOMAIN} {
+	tls {
+		dns cloudflare {env.CF_API_TOKEN}
+		resolvers 1.1.1.1 9.9.9.9
+	}
+
+	@root host {$DOMAIN}
+	handle @root {
+		redir https://jellyfin.{$DOMAIN}{uri}
+	}
+
+	@adguard host adguard.{$DOMAIN}
+	handle @adguard {
+		reverse_proxy adguard:3000
+	}
+
+	@jellyfin host jellyfin.{$DOMAIN}
+	handle @jellyfin {
+		reverse_proxy jellyfin:8096
+	}
+
+	@seerr host seerr.{$DOMAIN}
+	handle @seerr {
+		reverse_proxy seerr:5055
+	}
+
+	@chat host chat.{$DOMAIN}
+	handle @chat {
+		reverse_proxy open-webui:8080
+	}
+
+	handle {
+		respond "Not found" 404
+	}
+}

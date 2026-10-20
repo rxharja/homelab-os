@@ -18,6 +18,9 @@ PodmanArgs=--tty
 EnvironmentFile=/var/lib/homelab/config/riven/riven.env
 Volume=/var/lib/homelab/appdata/riven/data:/app/data
 Volume=/var/lib/homelab/appdata/riven/logs:/app/logs
+# Quality ranking, straight from /etc. bootc's 3-way /etc merge keeps your
+# edits across upgrades; change it and `systemctl restart riven`.
+Volume=/etc/homelab/ranking.json:/app/data/ranking.json:ro
 Volume=/var/mnt/media/riven:/mount:rshared
 # GraphQL API (for the Riven TUI). Localhost only.
 PublishPort=127.0.0.1:3000:3000

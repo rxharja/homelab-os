@@ -9,7 +9,7 @@ Type=notify
 ExecStartPre=-/usr/bin/fusermount3 -uz /var/mnt/media/zurg
 ExecStartPre=/bin/sh -c 'for i in $$(seq 1 60); do curl -fs -o /dev/null http://127.0.0.1:9999/dav/ && exit 0; sleep 1; done; exit 1'
 ExecStart=/usr/bin/rclone mount zurg: /var/mnt/media/zurg \
-  --config /usr/share/homelab/files/rclone.conf \
+  --config /usr/share/homelab/rclone.conf \
   --cache-dir /var/cache/homelab/rclone \
   --allow-other --dir-cache-time 10s \
   --vfs-cache-mode full --vfs-cache-max-size 20G \

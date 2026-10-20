@@ -25,23 +25,36 @@ git push ──► GitHub Actions ──► ghcr.io/<you>/homelab-os:latest
 | Zurg + rclone | Whole RD library (DMM hand-picks) at `/var/mnt/media/zurg` | internal |
 | Ollama (ROCm) | Local LLM on the 680M | `LAN_IP:11434` (Neptune) |
 | Open WebUI | Chat front end | `chat.DOMAIN` |
-| Cockpit | Web admin for host and containers | `cockpit.DOMAIN` |
+| Cockpit | Web admin for host and containers | `https://LAN_IP:9090` (self-signed) |
 | Tailscale | Remote access, no port forwarding | tailnet |
 | restic | Nightly backups 03:30 | n/a |
 
 ## Layout
 
+`rootfs/` is laid out exactly like the target filesystem and copied in with a single
+`COPY rootfs/ /`, so the path in the repo is the path on the box.
+
 ```
-Containerfile            the OS image
-quadlets/                rootful Quadlets -> /usr/share/containers/systemd
-templates/               rendered at boot with values from /etc/homelab
-files/riven/ranking.json Riven quality ranking (config as code)
-systemd/                 host units: shared media mount, render, rclone, backup, update schedule
-scripts/                 homelab-render/backup/restore/import/status, export-devbox.sh
-examples/                homelab.env, secrets.env, riven.extra.env
-bootc/                   bootc-image-builder configs (ISO and VM)
-images/caddy/            Caddy + Cloudflare DNS plugin
-docs/                    architecture, first boot, migration, operations
+Containerfile                              packages, then COPY rootfs/ /
+rootfs/
+  usr/share/containers/systemd/            rootful Quadlets (one per container)
+  usr/lib/systemd/system/                  host units: media mount, render, rclone,
+                                           backup, and the bootc update schedule
+  usr/lib/tmpfiles.d/homelab.conf          every directory the containers mount
+  usr/lib/sysctl.d/99-tailscale.conf       ip_forward, for the subnet router
+  usr/lib/systemd/resolved.conf.d/         frees port 53 for AdGuard
+  usr/bin/homelab-*                        render, backup, restore, import, status
+  usr/share/homelab/Caddyfile              static proxy config ({$DOMAIN} at runtime)
+  usr/share/homelab/templates/             the only two rendered files: riven.env
+                                           and zurg's config.yml (both hold a secret)
+  usr/share/homelab/rclone.conf            the Zurg WebDAV remote
+  usr/share/homelab/examples/              homelab.env, secrets.env, riven.extra.env
+  etc/homelab/ranking.json                 Riven quality ranking; a default in /etc, so
+                                           bootc's 3-way merge keeps your edits
+scripts/export-devbox.sh                   runs on the old dev box, not in the image
+bootc/                                     bootc-image-builder configs (ISO and VM)
+images/caddy/                              Caddy + Cloudflare DNS plugin
+docs/                                      architecture, first boot, migration, operations
 ```
 
 ## Quick start

@@ -2,6 +2,8 @@
 secrets.env
 *.secrets.env
 riven.extra.env
-!examples/*
+!rootfs/usr/share/homelab/examples/*
+# Guard: /etc/homelab in the image ships defaults (ranking.json) only.
+rootfs/etc/homelab/*.env
 homelab-export.tar.zst
 output/
