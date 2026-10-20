@@ -1,11 +1,14 @@
 IMAGE ?= localhost/homelab-os:latest
 OWNER ?= OWNER
+BOUND_IMAGES ?= 1
 
 build:            ## build the OS image locally
-	sudo podman build --build-arg IMAGE_OWNER=$(OWNER) -t $(IMAGE) .
+	sudo podman build --build-arg IMAGE_OWNER=$(OWNER) \
+	  --build-arg BOUND_IMAGES=$(BOUND_IMAGES) -t $(IMAGE) .
 
 caddy:            ## build the caddy-cloudflare image locally
-	podman build -t ghcr.io/$(OWNER)/caddy-cloudflare:latest images/caddy
+	# sudo: bootc-image-builder reads root's container storage, not yours.
+	sudo podman build -t ghcr.io/$(OWNER)/caddy-cloudflare:latest images/caddy
 
 iso: build        ## installer ISO in ./output (rootful podman required)
 	mkdir -p output
@@ -17,6 +20,9 @@ iso: build        ## installer ISO in ./output (rootful podman required)
 	  quay.io/centos-bootc/bootc-image-builder:latest \
 	  --type anaconda-iso --rootfs xfs --local $(IMAGE)
 
+# Bound images break bib's install step, and a dry run doesn't need them.
+# Force them on with: make qcow2 BOUND_IMAGES=1
+qcow2: BOUND_IMAGES = 0
 qcow2: build      ## VM disk for a dry run in virt-manager/GNOME Boxes
 	mkdir -p output
 	sudo podman run --rm -it --privileged --pull=newer \

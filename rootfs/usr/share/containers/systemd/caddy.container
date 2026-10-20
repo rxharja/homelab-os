@@ -15,8 +15,8 @@ PublishPort=443:443/tcp
 PublishPort=443:443/udp
 # Expands {$DOMAIN} and {$ACME_EMAIL} in the Caddyfile.
 EnvironmentFile=/etc/homelab/homelab.env
-# No :Z: /usr is read-only, so relabeling fails. If SELinux denies this read,
-# copy the file to /etc/homelab and mount that with :Z.
+# No :Z: /usr is read-only, so relabeling would fail. Verified readable under
+# enforcing SELinux: container_t can read usr_t.
 Volume=/usr/share/homelab/Caddyfile:/etc/caddy/Caddyfile:ro
 Volume=/var/lib/homelab/appdata/caddy/data:/data:Z,U
 Volume=/var/lib/homelab/appdata/caddy/config:/config:Z,U
@@ -24,6 +24,10 @@ Secret=cf_api_token,type=env,target=CF_API_TOKEN
 
 [Service]
 Restart=always
+# Caddy validates the Cloudflare token at config-load, so a bad token or a
+# brief DNS-API outage fails instantly. Without a delay it burns systemd's
+# 5-starts-in-10s limit and stays dead until started by hand.
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target

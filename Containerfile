@@ -6,6 +6,11 @@ FROM quay.io/fedora/fedora-bootc:${FEDORA_VERSION}
 # GitHub owner for ghcr.io/<owner>/caddy-cloudflare (set by CI).
 ARG IMAGE_OWNER=OWNER
 
+# Set to 0 to skip logically bound images. bootc-image-builder resolves them at
+# install time against a read-only containers-storage and fails, so the qcow2
+# dry run builds without them; the VM pulls each image on first unit start.
+ARG BOUND_IMAGES=1
+
 RUN dnf -y install 'dnf5-command(config-manager)' \
  && dnf config-manager addrepo --from-repofile=https://pkgs.tailscale.com/stable/fedora/tailscale.repo \
  && dnf -y install \
@@ -20,10 +25,12 @@ RUN set -eux; \
     sed -i "s|ghcr.io/OWNER/|ghcr.io/${IMAGE_OWNER,,}/|" /usr/share/containers/systemd/caddy.container; \
     # Bound images are pulled during install/upgrade, so a new OS never boots
     # without its containers.
-    mkdir -p /usr/lib/bootc/bound-images.d; \
-    for f in /usr/share/containers/systemd/*.container; do \
-      ln -s "$f" /usr/lib/bootc/bound-images.d/; \
-    done; \
+    if [ "${BOUND_IMAGES}" = 1 ]; then \
+      mkdir -p /usr/lib/bootc/bound-images.d; \
+      for f in /usr/share/containers/systemd/*.container; do \
+        ln -s "$f" /usr/lib/bootc/bound-images.d/; \
+      done; \
+    fi; \
     # UserNS=auto draws from the 'containers' range.
     grep -q '^containers:' /etc/subuid || echo 'containers:2147483647:2147483648' >>/etc/subuid; \
     grep -q '^containers:' /etc/subgid || echo 'containers:2147483647:2147483648' >>/etc/subgid; \
