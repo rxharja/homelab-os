@@ -1,18 +1,8 @@
 #!/usr/bin/bash
-# Turn /etc/homelab/{homelab,secrets}.env into the few bits of config that
-# can't be static in the image, because they embed a machine-specific secret:
-#
-#   * riven.env       - its database URL contains RIVEN_DB_PASSWORD
-#   * zurg config.yml - contains RD_TOKEN
-#   * podman secrets  - cf_api_token, riven_db_pw
-#   * tailscale up    - needs TS_AUTHKEY
-#
-# Everything else (directories, Caddyfile, ranking.json, firewall, sysctl)
-# ships in the image. Directories come from tmpfiles.d/homelab.conf.
-#
-# Idempotent: runs on every boot, safe to re-run by hand (then restart services).
-# This unit has no ConditionPathExists, so on an unconfigured box it fails and
-# the containers that Require= it stay down.
+# Renders the config that can't be static because it embeds a secret: riven.env
+# (DB password), zurg's config.yml (RD token), the cf_api_token and riven_db_pw
+# podman secrets, and the tailnet join. Everything else ships in the image.
+# Idempotent: runs every boot, safe to re-run by hand (then restart services).
 set -euo pipefail
 
 ETC=/etc/homelab
@@ -33,9 +23,8 @@ set -a
 . "$ETC/secrets.env"
 set +a
 
-# DOMAIN/LAN_IP/ACME_EMAIL aren't used below (Caddy reads homelab.env itself),
-# but this is the one unit that runs before the containers, so it's where a
-# half-filled config should be caught.
+# DOMAIN/LAN_IP/ACME_EMAIL are unused below, but this runs before the
+# containers, so it's where a half-filled config gets caught.
 for v in DOMAIN LAN_IP ACME_EMAIL CF_API_TOKEN RD_TOKEN TMDB_API_KEY RIVEN_DB_PASSWORD; do
   [[ -n ${!v:-} ]] || die "$v is not set in $ETC/{homelab,secrets}.env"
 done
@@ -45,7 +34,7 @@ JELLYFIN_API_KEY=${JELLYFIN_API_KEY:-}
 RIVEN_PLUGINS=${RIVEN_PLUGINS:-[\"seerr\",\"stremthru\",\"torrentio\",\"comet\",\"jellyfin\"]}
 export SEERR_API_KEY JELLYFIN_API_KEY RIVEN_PLUGINS
 
-# --- templates (explicit variable list so stray $ in files survive) -------------
+# Explicit variable list, so a stray $ in a template survives envsubst.
 VARS='${RD_TOKEN} ${TMDB_API_KEY} ${RIVEN_DB_PASSWORD} ${SEERR_API_KEY} ${JELLYFIN_API_KEY} ${RIVEN_PLUGINS}'
 render() { # template dest mode
   local tmp; tmp=$(mktemp)
@@ -55,18 +44,16 @@ render() { # template dest mode
 render zurg-config.yml  "$CFG/zurg/config.yml"   0600
 render riven.env        "$CFG/riven/riven.env"   0600
 
-# Extra plugin settings (e.g. Comet) are appended verbatim.
+# Extra plugin settings (e.g. Comet), appended verbatim.
 if [[ -r $ETC/riven.extra.env ]]; then
   cat "$ETC/riven.extra.env" >>"$CFG/riven/riven.env"
 fi
 [[ -n $SEERR_API_KEY && -n $JELLYFIN_API_KEY ]] || \
   log "NOTE: SEERR_API_KEY / JELLYFIN_API_KEY empty: Riven won't see requests until you add them (docs/first-boot.md)"
 
-# --- podman secrets ------------------------------------------------------------
 printf %s "$CF_API_TOKEN"      | podman secret create --replace cf_api_token - >/dev/null
 printf %s "$RIVEN_DB_PASSWORD" | podman secret create --replace riven_db_pw  - >/dev/null
 
-# --- tailscale -------------------------------------------------------------------
 # Subnet routing needs ip_forward, set by sysctl.d/99-tailscale.conf.
 if [[ -n ${TS_AUTHKEY:-} ]] && command -v tailscale >/dev/null; then
   if ! tailscale status >/dev/null 2>&1; then

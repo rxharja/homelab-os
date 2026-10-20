@@ -1,6 +1,6 @@
-# Jellyfin reads /var/mnt/media (riven/ + zurg/) via rslave, so it follows
-# Riven/rclone remounts live without restarting. No user namespace: reading
-# root-owned FUSE mounts across a userns is unreliable.
+# rslave on /var/mnt/media makes Riven/rclone remounts visible without a
+# restart. No user namespace: reading root-owned FUSE mounts across one is
+# unreliable.
 [Unit]
 Description=Jellyfin
 Requires=homelab-render.service
@@ -13,10 +13,10 @@ AutoUpdate=registry
 ContainerName=jellyfin
 Network=homelab.network
 SecurityLabelDisable=true
-# "-" = optional, so the unit still starts in a VM with no GPU.
+# "-": optional, so this starts in a VM with no GPU.
 AddDevice=-/dev/dri
 AddDevice=-/dev/kfd
-# Direct LAN access for apps that want ip:port (Neptune, Infuse). Caddy also proxies it.
+# Direct LAN access for ip:port clients (Neptune, Infuse). Caddy also proxies it.
 PublishPort=8096:8096
 Volume=/var/lib/homelab/appdata/jellyfin/config:/config
 Volume=/var/lib/homelab/appdata/jellyfin/cache:/cache

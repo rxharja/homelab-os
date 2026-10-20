@@ -13,11 +13,10 @@ UserNS=auto
 PublishPort=80:80/tcp
 PublishPort=443:443/tcp
 PublishPort=443:443/udp
-# DOMAIN + ACME_EMAIL for the Caddyfile's {$VAR} placeholders.
+# Expands {$DOMAIN} and {$ACME_EMAIL} in the Caddyfile.
 EnvironmentFile=/etc/homelab/homelab.env
-# Static config from the image. No :Z: /usr is read-only on a bootc box, so
-# relabeling would fail. If SELinux ever denies this read, copy the file to
-# /etc/homelab/Caddyfile and mount that with :Z instead.
+# No :Z: /usr is read-only, so relabeling fails. If SELinux denies this read,
+# copy the file to /etc/homelab and mount that with :Z.
 Volume=/usr/share/homelab/Caddyfile:/etc/caddy/Caddyfile:ro
 Volume=/var/lib/homelab/appdata/caddy/data:/data:Z,U
 Volume=/var/lib/homelab/appdata/caddy/config:/config:Z,U

@@ -3,8 +3,8 @@ Description=Render homelab config from /etc/homelab into /var/lib/homelab
 Wants=network-online.target
 After=network-online.target firewalld.service tailscaled.service
 Before=adguard.service caddy.service zurg.service riven-db.service riven-redis.service riven.service jellyfin.service seerr.service open-webui.service ollama.service
-# No ConditionPathExists: on an unconfigured box this must FAIL, not be skipped.
-# A skipped unit still satisfies Requires=; a failed one keeps the containers down.
+# No ConditionPathExists: missing config must fail this unit, not skip it.
+# A skipped unit still satisfies Requires=; a failed one holds the containers back.
 
 [Service]
 Type=oneshot

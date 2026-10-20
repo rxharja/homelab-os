@@ -11,7 +11,6 @@ ContainerName=open-webui
 Network=homelab.network
 UserNS=auto
 Environment=OLLAMA_BASE_URL=http://ollama:11434
-# WEBUI_URL lives in homelab.env: nothing here needs rendering.
 EnvironmentFile=/etc/homelab/homelab.env
 Volume=/var/lib/homelab/appdata/open-webui:/app/backend/data:Z,U
 

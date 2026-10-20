@@ -1,6 +1,5 @@
-# Riven runs ROOTFUL with no user namespace: its FUSE mount (RivenVFS) must
-# propagate out to the host and on into Jellyfin. That needs SYS_ADMIN,
-# /dev/fuse and an rshared bind of the host mount point.
+# No user namespace: RivenVFS's FUSE mount must propagate out to the host and
+# on into Jellyfin, which needs SYS_ADMIN, /dev/fuse and an rshared bind.
 [Unit]
 Description=Riven (requests -> scrape -> Real-Debrid -> VFS)
 Requires=homelab-media-mount.service homelab-render.service riven-db.service riven-redis.service
@@ -18,19 +17,18 @@ PodmanArgs=--tty
 EnvironmentFile=/var/lib/homelab/config/riven/riven.env
 Volume=/var/lib/homelab/appdata/riven/data:/app/data
 Volume=/var/lib/homelab/appdata/riven/logs:/app/logs
-# Quality ranking, straight from /etc. bootc's 3-way /etc merge keeps your
-# edits across upgrades; change it and `systemctl restart riven`.
+# bootc's 3-way /etc merge keeps local edits; restart riven after changing it.
 Volume=/etc/homelab/ranking.json:/app/data/ranking.json:ro
 Volume=/var/mnt/media/riven:/mount:rshared
-# GraphQL API (for the Riven TUI). Localhost only.
+# GraphQL API for the Riven TUI.
 PublishPort=127.0.0.1:3000:3000
 
 [Service]
 Restart=always
 # Clear a stale FUSE mount left by a crash, or the readiness check below lies.
 ExecStartPre=-/usr/bin/umount -l /var/mnt/media/riven
-# Report "started" only once the VFS is actually visible on the host,
-# so Jellyfin never starts against an empty folder.
+# Report started only once the VFS is visible on the host, so Jellyfin never
+# starts against an empty folder.
 ExecStartPost=/bin/sh -c 'for i in $$(seq 1 90); do mountpoint -q /var/mnt/media/riven && exit 0; sleep 1; done; exit 1'
 ExecStopPost=-/usr/bin/umount -l /var/mnt/media/riven
 

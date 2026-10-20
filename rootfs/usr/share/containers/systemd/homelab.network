@@ -1,3 +1,3 @@
-# Shared bridge network for all homelab containers (DNS by container name).
+# Shared bridge; containers resolve each other by name.
 [Network]
 NetworkName=homelab
