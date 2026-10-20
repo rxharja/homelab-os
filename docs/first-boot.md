@@ -1,5 +1,8 @@
 # First boot (fresh, no migration)
 
+0. **Password**: `ssh homelab@LAN_IP` (key-only; the installer sets no password), then
+   `sudo passwd homelab`. Cockpit at `https://LAN_IP:9090` authenticates against it via PAM,
+   so without this there's no admin UI and no console login.
 1. **Router**: DHCP reservation for the mini PC, matching `LAN_IP`.
 2. **Config**: fill `/etc/homelab/homelab.env` and `secrets.env` (see README). Use NEW tokens:
    the RD, TMDB, Seerr and Jellyfin keys pasted in chat earlier must be rotated.

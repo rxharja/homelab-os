@@ -31,6 +31,9 @@ RUN set -eux; \
     ln -sf ../run/systemd/resolve/resolv.conf /etc/resolv.conf; \
     # secrets.env lands here; tmpfiles.d re-asserts this on every boot.
     chmod 0750 /etc/homelab; \
+    # git can't track 0440, and sudo ignores a group-writable sudoers file.
+    chmod 0440 /etc/sudoers.d/10-wheel-nopasswd; \
+    visudo -cqf /etc/sudoers; \
     # Host services only. Podman's published ports bypass firewalld (netavark
     # writes its own nftables rules).
     firewall-offline-cmd --add-service={ssh,dns,http,https,cockpit}; \

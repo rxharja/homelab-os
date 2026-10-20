@@ -7,7 +7,7 @@ rules, the Caddy cert, Open WebUI chats) moves over in one tarball.
 
 ```bash
 cd ~/homelab && ./scripts/export-devbox.sh          # -> ~/homelab-export.tar.zst
-scp ~/homelab-export.tar.zst redon@LAN_IP:
+scp ~/homelab-export.tar.zst homelab@LAN_IP:
 ```
 
 ## 2. On the mini PC (after README quick start step 3)

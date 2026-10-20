@@ -1,0 +1,5 @@
+# SSH is key-only and root is locked, so a sudo password would only gate an
+# account an attacker already holds the key for. Set a real password anyway
+# (`sudo passwd homelab`): Cockpit authenticates against it via PAM.
+# The Containerfile chmods this to 0440; sudo ignores a group-writable file.
+%wheel ALL=(ALL) NOPASSWD: ALL

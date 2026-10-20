@@ -14,7 +14,7 @@
 | Update apps now | `sudo podman auto-update` |
 | Backup now | `sudo systemctl start homelab-backup` |
 | Restore everything | `sudo homelab-restore [snapshot]` |
-| Riven TUI | `ssh -L 3000:127.0.0.1:3000 redon@homelab`, then point the TUI at localhost:3000 |
+| Riven TUI | `ssh -L 3000:127.0.0.1:3000 homelab@homelab`, then point the TUI at localhost:3000 |
 | Try an image change in a VM | `make qcow2 OWNER=<you>`, boot `output/qcow2/disk.qcow2` in GNOME Boxes |
 
 ## Disaster recovery
