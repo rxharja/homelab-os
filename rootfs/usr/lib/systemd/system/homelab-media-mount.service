@@ -1,7 +1,8 @@
 [Unit]
 Description=Make /var/mnt/media a shared mount (FUSE mounts propagate into Jellyfin)
 DefaultDependencies=no
-After=local-fs.target
+# After tmpfiles.d, or the mkdir below leaves /var/mnt/media/riven root-owned.
+After=local-fs.target systemd-tmpfiles-setup.service
 Before=riven.service jellyfin.service zurg-mount.service
 
 [Service]

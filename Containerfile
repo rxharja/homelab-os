@@ -6,9 +6,8 @@ FROM quay.io/fedora/fedora-bootc:${FEDORA_VERSION}
 # GitHub owner for ghcr.io/<owner>/caddy-cloudflare (set by CI).
 ARG IMAGE_OWNER=OWNER
 
-# Set to 0 to skip logically bound images. bootc-image-builder resolves them at
-# install time against a read-only containers-storage and fails, so the qcow2
-# dry run builds without them; the VM pulls each image on first unit start.
+# 0 skips bound images: bootc-image-builder fails to resolve them against a
+# read-only containers-storage. The qcow2 dry run sets this.
 ARG BOUND_IMAGES=1
 
 RUN dnf -y install 'dnf5-command(config-manager)' \
