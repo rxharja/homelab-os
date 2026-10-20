@@ -1,5 +1,5 @@
-# Rendered by homelab-render. Contains your Real-Debrid token: lives only in
-# /var/lib/homelab/config/zurg/config.yml (mode 600), never in the image.
+# Rendered to /var/lib/homelab/config/zurg/config.yml (mode 600). Holds the
+# Real-Debrid token, so it never ships in the image.
 zurg: v1
 token: ${RD_TOKEN}
 port: 9999

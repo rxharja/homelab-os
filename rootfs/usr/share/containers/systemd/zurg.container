@@ -1,5 +1,5 @@
-# Optional: exposes your whole Real-Debrid library (incl. DMM hand-picks) over WebDAV.
-# rclone (zurg-mount.service) mounts it at /var/mnt/media/zurg for Jellyfin.
+# Serves the whole Real-Debrid library (incl. DMM hand-picks) over WebDAV.
+# zurg-mount.service rclone-mounts it at /var/mnt/media/zurg for Jellyfin.
 [Unit]
 Description=Zurg (Real-Debrid WebDAV)
 After=homelab-render.service

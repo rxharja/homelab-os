@@ -14,20 +14,12 @@ RUN dnf -y install 'dnf5-command(config-manager)' \
       firewalld mesa-vulkan-drivers zstd jq htop curl \
  && dnf clean all && rm -rf /var/cache/* /var/log/*
 
-# Containers, templates, default config-as-code.
-COPY quadlets/   /usr/share/containers/systemd/
-COPY templates/  /usr/share/homelab/templates/
-COPY files/      /usr/share/homelab/files/
-COPY examples/   /usr/share/homelab/examples/
-COPY scripts/homelab-* /usr/bin/
-COPY systemd/    /usr/lib/systemd/system/
-COPY files/tmpfiles-homelab.conf  /usr/lib/tmpfiles.d/homelab.conf
-COPY files/resolved-homelab.conf  /usr/lib/systemd/resolved.conf.d/homelab.conf
+COPY rootfs/ /
 
 RUN set -eux; \
     sed -i "s|ghcr.io/OWNER/|ghcr.io/${IMAGE_OWNER,,}/|" /usr/share/containers/systemd/caddy.container; \
-    # Logically bound images: pulled during install/upgrade, so a new OS never
-    # boots without its containers present.
+    # Bound images are pulled during install/upgrade, so a new OS never boots
+    # without its containers.
     mkdir -p /usr/lib/bootc/bound-images.d; \
     for f in /usr/share/containers/systemd/*.container; do \
       ln -s "$f" /usr/lib/bootc/bound-images.d/; \
@@ -37,6 +29,12 @@ RUN set -eux; \
     grep -q '^containers:' /etc/subgid || echo 'containers:2147483647:2147483648' >>/etc/subgid; \
     # AdGuard owns :53, so point resolv.conf at the real upstream list.
     ln -sf ../run/systemd/resolve/resolv.conf /etc/resolv.conf; \
+    # secrets.env lands here; tmpfiles.d re-asserts this on every boot.
+    chmod 0750 /etc/homelab; \
+    # Host services only. Podman's published ports bypass firewalld (netavark
+    # writes its own nftables rules).
+    firewall-offline-cmd --add-service={ssh,dns,http,https,cockpit}; \
+    firewall-offline-cmd --add-port={8096,11434,3001}/tcp; \
     systemctl enable tailscaled.service cockpit.socket firewalld.service \
       podman-auto-update.timer homelab-media-mount.service homelab-render.service \
       zurg-mount.service ollama-models.service homelab-backup.timer

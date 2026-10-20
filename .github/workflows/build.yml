@@ -42,7 +42,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Lint shell scripts
-        run: shellcheck -S warning scripts/*
+        run: shellcheck -S warning rootfs/usr/bin/homelab-* scripts/export-devbox.sh
       - uses: redhat-actions/buildah-build@v2
         id: build
         with:

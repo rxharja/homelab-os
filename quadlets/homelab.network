@@ -1,3 +1,0 @@
-# Shared bridge network for all homelab containers (DNS by container name).
-[Network]
-NetworkName=homelab

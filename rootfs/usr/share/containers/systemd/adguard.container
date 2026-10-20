@@ -9,7 +9,7 @@ AutoUpdate=registry
 ContainerName=adguard
 Network=homelab.network
 UserNS=auto
-# DNS for the whole LAN. Admin UI: https://adguard.DOMAIN via Caddy, or LAN_IP:3001 for the first-run wizard.
+# :53 serves the LAN. Admin UI via Caddy, or LAN_IP:3001 for the setup wizard.
 PublishPort=53:53/tcp
 PublishPort=53:53/udp
 PublishPort=3001:3000/tcp

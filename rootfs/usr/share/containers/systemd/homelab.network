@@ -1,0 +1,3 @@
+# Shared bridge; containers resolve each other by name.
+[Network]
+NetworkName=homelab
