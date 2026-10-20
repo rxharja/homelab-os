@@ -2,11 +2,16 @@ IMAGE ?= localhost/homelab-os:latest
 OWNER ?= OWNER
 BOUND_IMAGES ?= 1
 
-build:            ## build the OS image locally
+check-owner:
+	@test "$(OWNER)" != OWNER || { \
+	  echo "OWNER is unset, so caddy would be baked in as ghcr.io/owner/." >&2; \
+	  echo "Example: make iso OWNER=rxharja" >&2; exit 1; }
+
+build: check-owner  ## build the OS image locally
 	sudo podman build --build-arg IMAGE_OWNER=$(OWNER) \
 	  --build-arg BOUND_IMAGES=$(BOUND_IMAGES) -t $(IMAGE) .
 
-caddy:            ## build the caddy-cloudflare image locally
+caddy: check-owner  ## build the caddy-cloudflare image locally
 	# sudo: bootc-image-builder reads root's container storage.
 	sudo podman build -t ghcr.io/$(OWNER)/caddy-cloudflare:latest images/caddy
 
@@ -36,4 +41,4 @@ lint:
 	shellcheck -S warning rootfs/usr/bin/homelab-* scripts/export-devbox.sh
 	python3 -m json.tool rootfs/etc/homelab/ranking.json >/dev/null
 
-.PHONY: build caddy iso qcow2 lint
+.PHONY: check-owner build caddy iso qcow2 lint

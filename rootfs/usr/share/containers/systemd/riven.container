@@ -3,7 +3,7 @@
 [Unit]
 Description=Riven (requests -> scrape -> Real-Debrid -> VFS)
 Requires=homelab-media-mount.service homelab-render.service riven-db.service riven-redis.service
-After=homelab-media-mount.service homelab-render.service riven-db.service riven-redis.service seerr.service
+After=homelab-media-mount.service homelab-render.service riven-db.service riven-redis.service
 
 [Container]
 Image=ghcr.io/rivenmedia/riven-ts:main
