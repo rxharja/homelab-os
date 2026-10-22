@@ -1,5 +1,7 @@
 {
   "settings": {
+    "exclude": ["\\bexe\\b", "\\b(SkyUHD|Sky[ .]Sports|F1TV|GP[ .]Race)\\b"],
+    "preferred": ["^(?!.*\\b((AI.?)?Upscal(ed?|ing)|Enhanced?|ups(uhd|fhd|hd|4k)|iris2|Regraded?)\\b).*\\b(2160p|4k|uhd)\\b"],
     "resolutions": {
       "r2160p": true,
       "r1080p": true,
@@ -13,9 +15,6 @@
       "removeRanksUnder": -5000,
       "removeAdultContent": true,
       "titleSimilarity": 0.85
-    },
-    "languages": {
-      "preferred": ["en"]
     }
   },
   "rankingModel": {
@@ -53,6 +52,14 @@
     "stereo": -500,
 
     "edition": 200,
+    "network": 200,
+    "scene": 0,
+    "retail": 0,
+    "subbed": 0,
+    "uncensored": 0,
+    "documentary": 0,
+    "size": 0,
+    "mono": 0,
     "proper": 50,
     "repack": 50,
     "dubbed": -2000,
