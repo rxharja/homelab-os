@@ -15,6 +15,9 @@ caddy: check-owner  ## build the caddy-cloudflare image locally
 	# sudo: bootc-image-builder reads root's container storage.
 	sudo podman build -t ghcr.io/$(OWNER)/caddy-cloudflare:latest images/caddy
 
+# Bound images fill the installer's RAM; quadlets pull them on first boot instead.
+# The first bootc upgrade to the CI image binds them again.
+iso: BOUND_IMAGES = 0
 iso: build        ## installer ISO in ./output (rootful podman required)
 	mkdir -p output
 	sudo podman run --rm -it --privileged --pull=newer \
