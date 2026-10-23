@@ -15,6 +15,7 @@ Secret=riven_db_pw,type=env,target=POSTGRES_PASSWORD
 Volume=/var/lib/homelab/appdata/riven/db:/var/lib/postgresql/data:Z,U
 HealthCmd=pg_isready -U riven
 HealthInterval=10s
+HealthStartPeriod=30s
 Notify=healthy
 
 [Service]

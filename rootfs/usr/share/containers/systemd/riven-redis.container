@@ -13,6 +13,7 @@ Exec=redis-server --maxmemory-policy noeviction --appendonly yes
 Volume=/var/lib/homelab/appdata/riven/redis:/data:Z,U
 HealthCmd=redis-cli ping
 HealthInterval=10s
+HealthStartPeriod=30s
 Notify=healthy
 
 [Service]
