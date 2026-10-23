@@ -11,11 +11,13 @@ Image=docker.io/ollama/ollama:rocm
 AutoUpdate=registry
 ContainerName=ollama
 Network=homelab.network
-# "-": optional, so this starts in a VM with no GPU.
-AddDevice=-/dev/dri
-AddDevice=-/dev/kfd
+# No "-" prefix: quadlet checks it at generator time, before amdgpu creates the nodes.
+AddDevice=/dev/dri
+AddDevice=/dev/kfd
 SecurityLabelDisable=true
 Environment=HSA_OVERRIDE_GFX_VERSION=10.3.0
+# Ollama skips integrated GPUs unless told otherwise.
+Environment=OLLAMA_IGPU_ENABLE=1
 Environment=OLLAMA_KEEP_ALIVE=30m
 # LAN-exposed WITHOUT auth so Neptune can use it. Never port-forward this.
 PublishPort=11434:11434

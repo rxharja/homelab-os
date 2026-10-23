@@ -13,9 +13,9 @@ AutoUpdate=registry
 ContainerName=jellyfin
 Network=homelab.network
 SecurityLabelDisable=true
-# "-": optional, so this starts in a VM with no GPU.
-AddDevice=-/dev/dri
-AddDevice=-/dev/kfd
+# No "-" prefix: quadlet checks it at generator time, before amdgpu creates the nodes.
+AddDevice=/dev/dri
+AddDevice=/dev/kfd
 # Direct LAN access for ip:port clients (Neptune, Infuse). Caddy also proxies it.
 PublishPort=8096:8096
 Volume=/var/lib/homelab/appdata/jellyfin/config:/config
