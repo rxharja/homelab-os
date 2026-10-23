@@ -4,8 +4,8 @@
 [Unit]
 Description=Jellyfin
 Requires=homelab-render.service
-Wants=riven.service zurg-mount.service
-After=homelab-render.service homelab-media-mount.service riven.service zurg-mount.service
+Wants=riven.service
+After=homelab-render.service homelab-media-mount.service riven.service
 
 [Container]
 Image=docker.io/jellyfin/jellyfin:latest

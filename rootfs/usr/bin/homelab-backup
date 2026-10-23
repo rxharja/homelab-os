@@ -5,6 +5,11 @@ set -euo pipefail
 set -a; . /etc/homelab/homelab.env; . /etc/homelab/secrets.env; set +a
 : "${RESTIC_REPOSITORY:?set RESTIC_REPOSITORY in secrets.env}"
 : "${RESTIC_PASSWORD:?set RESTIC_PASSWORD in secrets.env}"
+# A bare word is a relative path to restic, and `restic init` would try to create it under read-only /.
+case "$RESTIC_REPOSITORY" in
+  /* | *:*) ;;
+  *) echo "RESTIC_REPOSITORY=$RESTIC_REPOSITORY is not an absolute path or backend URL" >&2; exit 1 ;;
+esac
 
 APP=/var/lib/homelab/appdata
 restic cat config >/dev/null 2>&1 || restic init

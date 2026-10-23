@@ -1,0 +1,11 @@
+# The RTL8125 link flaps at 2.5G for ~2 min before settling at 1G, which times
+# out NetworkManager-wait-online. Advertise 1G only so it links on the first try.
+# Only the first matching .link applies, so the naming policy is repeated from 99-default.link.
+[Match]
+MACAddress=78:55:36:0d:54:bd
+
+[Link]
+NamePolicy=keep kernel database onboard slot path
+AlternativeNamesPolicy=database onboard slot path
+MACAddressPolicy=persistent
+Advertise=1000baset-full

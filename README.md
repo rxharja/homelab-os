@@ -66,7 +66,7 @@ docs/                                      architecture, first boot, migration, 
    ```bash
    sudo cp /usr/share/homelab/examples/{homelab,secrets}.env /etc/homelab/
    sudo chmod 600 /etc/homelab/secrets.env && sudoedit /etc/homelab/*.env
-   sudo systemctl restart homelab-render && sudo systemctl start adguard caddy jellyfin seerr riven ollama open-webui zurg-mount
+   sudo systemctl restart homelab-render && sudo systemctl start adguard caddy jellyfin seerr riven ollama open-webui
    ```
 4. Follow [docs/first-boot.md](docs/first-boot.md), or [docs/migration.md](docs/migration.md) to carry over the dev box state.
 

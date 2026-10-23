@@ -46,6 +46,6 @@ RUN set -eux; \
     firewall-offline-cmd --add-port={8096,11434,3001}/tcp; \
     systemctl enable tailscaled.service cockpit.socket firewalld.service \
       podman-auto-update.timer homelab-media-mount.service homelab-render.service \
-      zurg-mount.service ollama-models.service homelab-backup.timer
+      ollama-models.service homelab-backup.timer
 
 RUN bootc container lint

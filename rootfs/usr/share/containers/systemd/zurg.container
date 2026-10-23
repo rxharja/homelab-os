@@ -1,5 +1,6 @@
 # Serves the whole Real-Debrid library (incl. DMM hand-picks) over WebDAV.
 # zurg-mount.service rclone-mounts it at /var/mnt/media/zurg for Jellyfin.
+# Disabled: no [Install], start by hand with `systemctl start zurg-mount`.
 [Unit]
 Description=Zurg (Real-Debrid WebDAV)
 After=homelab-render.service
@@ -17,6 +18,3 @@ Volume=/var/lib/homelab/appdata/zurg/data:/app/data:Z,U
 
 [Service]
 Restart=always
-
-[Install]
-WantedBy=multi-user.target
