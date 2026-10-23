@@ -36,6 +36,11 @@
 		reverse_proxy open-webui:8080
 	}
 
+  @paperless host docs.{$DOMAIN}
+  handle @paperless {
+    reverse_proxy paperless:8000
+  }
+
 	handle {
 		respond "Not found" 404
 	}

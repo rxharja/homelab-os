@@ -1,0 +1,32 @@
+[Unit]
+Description=Paperless ngx
+Requires=homelab-render.service paperless-db.service paperless-redis.service
+After=homelab-render.service paperless-db.service paperless-redis.service
+
+[Container]
+Image=ghcr.io/paperless-ngx/paperless-ngx:latest
+UserNS=auto
+AutoUpdate=registry
+ContainerName=paperless
+Network=homelab.network
+
+Volume=/var/lib/homelab/appdata/paperless/data:/usr/src/paperless/data:Z,U
+Volume=/var/lib/homelab/appdata/paperless/media:/usr/src/paperless/media:Z,U
+Volume=/var/lib/homelab/appdata/paperless/export:/usr/src/paperless/export:Z,U
+Volume=/var/lib/homelab/appdata/paperless/consume:/usr/src/paperless/consume:Z,U
+
+EnvironmentFile=/etc/homelab/homelab.env
+Environment=PAPERLESS_OCR_LANGUAGE=eng
+Environment=PAPERLESS_TIME_ZONE=America/New_York
+Environment=TZ=America/New_York
+Environment=PAPERLESS_DBHOST=paperless-db
+Environment=PAPERLESS_DBENGINE=postgresql
+Environment=PAPERLESS_REDIS=redis://paperless-redis:6379
+Secret=paperless_db_pw,type=env,target=PAPERLESS_DBPASS
+Secret=paperless_secret_key,type=env,target=PAPERLESS_SECRET_KEY
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

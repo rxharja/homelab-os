@@ -1,0 +1,23 @@
+[Unit]
+Description=Redis for Paperless
+After=homelab-render.service
+Requires=homelab-render.service
+
+[Container]
+Image=docker.io/library/redis:8-alpine
+AutoUpdate=registry
+ContainerName=paperless-redis
+Network=homelab.network
+UserNS=auto
+Exec=redis-server --maxmemory-policy noeviction --appendonly yes
+Volume=/var/lib/homelab/appdata/paperless/redis:/data:Z,U
+HealthCmd=redis-cli ping
+HealthInterval=10s
+HealthStartPeriod=30s
+Notify=healthy
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

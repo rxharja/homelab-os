@@ -25,7 +25,7 @@ set +a
 
 # DOMAIN/LAN_IP/ACME_EMAIL are unused below, but this runs before the
 # containers, so it's where a half-filled config gets caught.
-for v in DOMAIN LAN_IP ACME_EMAIL CF_API_TOKEN RD_TOKEN TMDB_API_KEY RIVEN_DB_PASSWORD; do
+for v in DOMAIN LAN_IP ACME_EMAIL CF_API_TOKEN RD_TOKEN TMDB_API_KEY RIVEN_DB_PASSWORD PAPERLESS_DB_PASSWORD PAPERLESS_SECRET_KEY; do
   [[ -n ${!v:-} ]] || die "$v is not set in $ETC/{homelab,secrets}.env"
 done
 # Filled in after first boot (generated inside the Seerr / Jellyfin UIs).
@@ -51,8 +51,10 @@ fi
 [[ -n $SEERR_API_KEY && -n $JELLYFIN_API_KEY ]] || \
   log "NOTE: SEERR_API_KEY / JELLYFIN_API_KEY empty: Riven won't see requests until you add them (docs/first-boot.md)"
 
-printf %s "$CF_API_TOKEN"      | podman secret create --replace cf_api_token - >/dev/null
-printf %s "$RIVEN_DB_PASSWORD" | podman secret create --replace riven_db_pw  - >/dev/null
+printf %s "$CF_API_TOKEN"          | podman secret create --replace cf_api_token - >/dev/null
+printf %s "$RIVEN_DB_PASSWORD"     | podman secret create --replace riven_db_pw - >/dev/null
+printf %s "$PAPERLESS_DB_PASSWORD" | podman secret create --replace paperless_db_pw - >/dev/null
+printf %s "$PAPERLESS_SECRET_KEY"  | podman secret create --replace paperless_secret_key - >/dev/null
 
 # Subnet routing needs ip_forward, set by sysctl.d/99-tailscale.conf.
 if [[ -n ${TS_AUTHKEY:-} ]] && command -v tailscale >/dev/null; then

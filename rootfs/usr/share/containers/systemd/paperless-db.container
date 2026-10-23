@@ -1,0 +1,25 @@
+[Unit]
+Description=PostgreSQL for Paperless
+After=homelab-render.service
+Requires=homelab-render.service
+
+[Container]
+Image=docker.io/library/postgres:17-alpine
+AutoUpdate=registry
+ContainerName=paperless-db
+Network=homelab.network
+UserNS=auto
+Environment=POSTGRES_USER=paperless
+Environment=POSTGRES_DB=paperless
+Secret=paperless_db_pw,type=env,target=POSTGRES_PASSWORD
+Volume=/var/lib/homelab/appdata/paperless/db:/var/lib/postgresql/data:Z,U
+HealthCmd=pg_isready -U paperless
+HealthInterval=10s
+HealthStartPeriod=30s
+Notify=healthy
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
