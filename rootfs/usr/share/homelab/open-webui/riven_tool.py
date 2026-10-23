@@ -7,8 +7,12 @@ version: 0.1.0
 # Install: Open WebUI > Workspace > Tools > + > paste this file. Re-paste after edits.
 # Talks to Riven's GraphQL API over homelab.network; it has no auth.
 
+from difflib import SequenceMatcher
+
 import aiohttp
 from pydantic import BaseModel, Field
+
+NO_PICKING = "Riven picks streams automatically; it can't be told to use a specific one."
 
 # Riven doesn't persist its ranking score, so "best" is approximated from the parsed name.
 RESOLUTION_RANK = {"2160p": 5, "1440p": 4, "1080p": 3, "720p": 2, "576p": 1, "480p": 1}
@@ -23,7 +27,15 @@ EPISODE = f"id number activeStream {{ infoHash parsedData }} {ENTRY}"
 SEARCH = """
 query ($search: String!) {
   mediaItems(search: $search, itemsPerPage: 10) {
-    items { ... on MediaItem { id title year type state } }
+    items { ... on MediaItem { id title year type state nextScrapeAttemptAt } }
+  }
+}"""
+
+LIBRARY = """
+query ($after: String) {
+  mediaItems(after: $after, itemsPerPage: 200) {
+    endCursor hasNextPage
+    items { ... on MediaItem { id title year type state nextScrapeAttemptAt } }
   }
 }"""
 
@@ -67,6 +79,10 @@ mutation ($id: ID!) { blacklistActiveStream(mediaItemId: $id) }
 
 class RivenError(Exception):
     pass
+
+
+def _norm(title: str) -> str:
+    return " ".join("".join(c if c.isalnum() else " " for c in title.casefold()).split())
 
 
 def _describe(parsed: dict) -> str:
@@ -127,15 +143,38 @@ class Tools:
     async def _find(self, title: str, year: int | None) -> tuple[dict, str]:
         data = await self._gql(SEARCH, search=title)
         items = [i for i in data["mediaItems"]["items"] if i]
+        if not items:
+            return await self._closest(title)
         if year:
             items = [i for i in items if int(i.get("year") or 0) == year] or items
-        if not items:
-            raise RivenError(f"Riven has nothing matching '{title}'.")
         exact = [i for i in items if i["title"].casefold() == title.casefold()]
         pick = (exact or items)[0]
         others = [f"{i['title']} ({int(i['year'] or 0)})" for i in items if i is not pick]
         note = f"Other matches: {', '.join(others[:4])}." if len(exact) != 1 and others else ""
         return pick, note
+
+    async def _closest(self, title: str) -> tuple[dict, str]:
+        # Riven's search is a substring match, so misheard voice input ("Wrecket Ralph") finds nothing.
+        library, after = [], None
+        for _ in range(10):
+            page = (await self._gql(LIBRARY, after=after))["mediaItems"]
+            library += [i for i in page["items"] if i]
+            if not page["hasNextPage"]:
+                break
+            after = page["endCursor"]
+        wanted = _norm(title)
+        scored = sorted(
+            ((SequenceMatcher(None, wanted, _norm(i["title"])).ratio(), i) for i in library),
+            key=lambda si: si[0],
+            reverse=True,
+        )
+        if not scored or scored[0][0] < 0.6:
+            raise RivenError(f"Riven has nothing matching '{title}'.")
+        pick = scored[0][1]
+        return pick, (
+            f"No exact match for '{title}'; assumed {pick['title']}. "
+            "Tell the user which title was used so they can correct it."
+        )
 
     async def _episodes(self, show_id: str, season: int | None, episode: int | None) -> list[dict]:
         data = await self._gql(SHOW, id=show_id)
@@ -168,7 +207,9 @@ class Tools:
                 movie = (await self._gql(MOVIE, id=item["id"]))["mediaItemById"]
                 stream = movie.get("activeStream")
                 if not stream:
-                    return f"{head} No stream picked yet. {note}"
+                    retry = item.get("nextScrapeAttemptAt")
+                    when = f" Next attempt: {retry}." if retry else ""
+                    return f"{head} No stream picked yet.{when} {NO_PICKING} {note}"
                 return f"{head}\nActive stream: {_describe(stream['parsedData'])}\n{_entry(movie)}\n{note}"
 
             episodes = await self._episodes(item["id"], season, episode)
@@ -229,19 +270,28 @@ class Tools:
                 for s in level.get("streams", []):
                     streams.setdefault(s["infoHash"], s["parsedData"])
             active = (data.get("activeStream") or {}).get("infoHash")
-            ranked = sorted(
-                ((h, p) for h, p in streams.items() if h not in blacklisted and not p.get("trash")),
-                key=lambda hp: _score(hp[1]),
-                reverse=True,
-            )
+            # Mirrors Riven's titleSimilarity check, so off-title scrape results aren't listed.
+            wanted = item["title"].casefold()
+            usable = {
+                h: p for h, p in streams.items()
+                if h not in blacklisted and not p.get("trash") and not p.get("threeD")
+                and SequenceMatcher(None, wanted, (p.get("title") or "").casefold()).ratio() >= 0.85
+            }
+            ranked = sorted(usable.items(), key=lambda hp: _score(hp[1]), reverse=True)
             if not ranked:
                 return f"No usable streams scraped for {item['title']}. {note}"
-            lines = [f"{item['title']}: {len(ranked)} usable streams, {len(blacklisted)} blacklisted."]
+            dropped = len(streams) - len(usable) - len(blacklisted & streams.keys())
+            lines = [
+                f"{item['title']}: {len(ranked)} usable streams, {len(blacklisted)} blacklisted"
+                + (f", {dropped} off-title or 3D skipped." if dropped else ".")
+            ]
             for n, (h, p) in enumerate(ranked[: self.valves.max_streams], 1):
                 lines.append(f"{n}. {'[ACTIVE] ' if h == active else ''}{_describe(p)}")
             if active and active not in dict(ranked[: self.valves.max_streams]):
                 lines.append("The active stream is not in this top list.")
-            lines.append("Riven can't switch to a specific stream; blacklisting the active one makes it pick the next.")
+            if not active:
+                lines.append("No stream is active yet.")
+            lines.append(f"{NO_PICKING} Blacklisting the active one makes it pick the next.")
             if note:
                 lines.append(note)
             return "\n".join(lines)
