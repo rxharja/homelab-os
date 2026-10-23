@@ -7,5 +7,8 @@ ConditionPathExists=/etc/homelab/secrets.env
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/homelab-backup
+# System units get no $HOME, and restic exits without a cache dir.
+CacheDirectory=restic
+Environment=RESTIC_CACHE_DIR=%C/restic
 Nice=10
 IOSchedulingClass=idle
