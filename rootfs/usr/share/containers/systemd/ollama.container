@@ -18,6 +18,8 @@ SecurityLabelDisable=true
 Environment=HSA_OVERRIDE_GFX_VERSION=10.3.0
 # Ollama skips integrated GPUs unless told otherwise.
 Environment=OLLAMA_IGPU_ENABLE=1
+# qwen3 thinks before answering; the 4096 default truncates. ~7.4 GB for qwen3:8b.
+Environment=OLLAMA_CONTEXT_LENGTH=16384
 Environment=OLLAMA_KEEP_ALIVE=30m
 # LAN-exposed WITHOUT auth so Neptune can use it. Never port-forward this.
 PublishPort=11434:11434
