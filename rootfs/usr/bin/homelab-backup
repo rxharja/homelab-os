@@ -18,6 +18,10 @@ echo "dumping riven-db"
 podman exec riven-db pg_dump -U riven --clean --if-exists --no-owner riven >"$APP/_dumps/riven.sql.tmp"
 mv "$APP/_dumps/riven.sql.tmp" "$APP/_dumps/riven.sql"
 
+echo "dumping paperless-db"
+podman exec paperless-db pg_dump -U paperless --clean --if-exists --no-owner paperless >"$APP/_dumps/paperless.sql.tmp"
+mv "$APP/_dumps/paperless.sql.tmp" "$APP/_dumps/paperless.sql"
+
 # SQLite apps: stop briefly for a consistent copy, always restart.
 SQLITE_APPS=(seerr jellyfin open-webui)
 restart() { systemctl start "${SQLITE_APPS[@]/%/.service}" || true; }

@@ -28,6 +28,9 @@ set +a
 for v in DOMAIN LAN_IP ACME_EMAIL CF_API_TOKEN RD_TOKEN TMDB_API_KEY RIVEN_DB_PASSWORD PAPERLESS_DB_PASSWORD PAPERLESS_SECRET_KEY; do
   [[ -n ${!v:-} ]] || die "$v is not set in $ETC/{homelab,secrets}.env"
 done
+
+[[ $ACME_EMAIL != *@example.com ]] || die "ACME_EMAIL is still the example address; Let's Encrypt rejects it"
+
 # Filled in after first boot (generated inside the Seerr / Jellyfin UIs).
 SEERR_API_KEY=${SEERR_API_KEY:-}
 JELLYFIN_API_KEY=${JELLYFIN_API_KEY:-}
