@@ -1,11 +1,16 @@
 #!/usr/bin/bash
-# Wipe riven-db's data dir and load a pg_dump into a fresh database.
+# Wipe <name>-db's data dir and load a pg_dump into a fresh database.
+# Assumes the riven/paperless layout: container <name>-db, user and database <name>.
 set -euo pipefail
-DUMP=${1:?usage: homelab-load-db <dump.sql>}
+NAME=${1:?usage: homelab-load-db <riven|paperless> <dump.sql>}
+DUMP=${2:?usage: homelab-load-db <riven|paperless> <dump.sql>}
+
+systemctl cat "$NAME-db.service" >/dev/null 2>&1 || { echo "no $NAME-db.service"; exit 1; }
 [[ -r $DUMP ]] || { echo "no dump at $DUMP"; exit 1; }
-systemctl stop riven.service riven-db.service || true
-rm -rf /var/lib/homelab/appdata/riven/db
-mkdir -p /var/lib/homelab/appdata/riven/db
-systemctl start riven-db.service        # Notify=healthy: returns once pg is ready
-podman exec -i riven-db psql -q -v ON_ERROR_STOP=1 -U riven -d riven <"$DUMP"
-echo "riven-db loaded from $DUMP"
+
+systemctl stop "$NAME.service" "$NAME-db.service" || true
+rm -rf "/var/lib/homelab/appdata/$NAME/db"
+mkdir -p "/var/lib/homelab/appdata/$NAME/db"
+systemctl start "$NAME-db.service"        # Notify=healthy: returns once pg is ready
+podman exec -i "$NAME-db" psql -q -v ON_ERROR_STOP=1 -U "$NAME" -d "$NAME" <"$DUMP"
+echo "$NAME-db loaded from $DUMP"

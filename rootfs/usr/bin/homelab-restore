@@ -6,7 +6,7 @@ set -euo pipefail
 SNAP=${1:-latest}
 set -a; . /etc/homelab/secrets.env; set +a
 APP=/var/lib/homelab/appdata
-SERVICES=(caddy open-webui seerr jellyfin riven zurg-mount zurg riven-redis riven-db adguard)
+SERVICES=(caddy open-webui seerr jellyfin riven zurg-mount zurg riven-redis riven-db adguard paperless paperless-db paperless-redis)
 
 read -rp "This overwrites $APP with snapshot '$SNAP'. Type yes: " ok
 [[ $ok == yes ]] || exit 1
@@ -17,7 +17,14 @@ restic restore "$SNAP" --target /var/tmp/homelab-restore --include /etc/homelab
 restic restore "$SNAP" --target / --include "$APP"
 echo "Snapshot's /etc/homelab is in /var/tmp/homelab-restore/etc/homelab (diff it against yours)."
 
-homelab-load-db "$APP/_dumps/riven.sql"
+# Snapshots older than an app have no dump for it; that app starts empty.
+for db in riven paperless; do
+  if [[ -r $APP/_dumps/$db.sql ]]; then
+    homelab-load-db "$db" "$APP/_dumps/$db.sql"
+  else
+    echo "WARNING: no $db.sql in snapshot; $db-db starts empty"
+  fi
+done
 systemctl start homelab-render.service
 systemctl start "${SERVICES[@]/%/.service}"
 echo "restore complete"

@@ -18,7 +18,6 @@ Volume=/var/lib/homelab/appdata/paperless/consume:/usr/src/paperless/consume:Z,U
 EnvironmentFile=/etc/homelab/homelab.env
 Environment=PAPERLESS_OCR_LANGUAGE=eng
 Environment=PAPERLESS_TIME_ZONE=America/New_York
-Environment=TZ=America/New_York
 Environment=PAPERLESS_DBHOST=paperless-db
 Environment=PAPERLESS_DBENGINE=postgresql
 Environment=PAPERLESS_REDIS=redis://paperless-redis:6379
