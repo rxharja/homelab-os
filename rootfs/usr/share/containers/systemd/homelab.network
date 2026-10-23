@@ -1,3 +1,4 @@
 # Shared bridge; containers resolve each other by name.
 [Network]
 NetworkName=homelab
+IPv6=true
