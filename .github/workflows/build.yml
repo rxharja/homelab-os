@@ -2,7 +2,7 @@ name: build
 
 on:
   push:
-    branches: [main]
+    branches: [main, testing]
   pull_request:
   schedule:
     - cron: "17 5 * * 6"   # weekly rebuild picks up Fedora + package updates
@@ -24,7 +24,7 @@ jobs:
         id: build
         with:
           image: caddy-cloudflare
-          tags: latest ${{ github.sha }}
+          tags: ${{ github.ref_name == 'main' && 'latest' || 'testing' }} ${{ github.sha }}
           context: images/caddy
           containerfiles: images/caddy/Containerfile
       - if: github.event_name != 'pull_request'
@@ -47,7 +47,7 @@ jobs:
         id: build
         with:
           image: homelab-os
-          tags: latest ${{ github.sha }}
+          tags: ${{ github.ref_name == 'main' && 'latest' || 'testing' }} ${{ github.sha }}
           containerfiles: Containerfile
           build-args: |
             IMAGE_OWNER=${{ github.repository_owner }}
