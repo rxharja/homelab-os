@@ -26,7 +26,7 @@
     Create the admin with `sudo podman exec -it paperless python3 manage.py createsuperuser`.
     My Profile → API Auth Token → `PAPERLESS_API_TOKEN`, then
     `sudo systemctl restart homelab-render paperless-gpt`. Tag a document `paperless-gpt`
-    to review suggestions at `paperless-gpt.DOMAIN`, or `paperless-gpt-auto` to apply them.
+    to review suggestions at `sort.DOMAIN`, or `paperless-gpt-auto` to apply them.
 12. **Neptune**: Jellyfin `https://jellyfin.DOMAIN` (or `http://LAN_IP:8096`), Ollama `http://LAN_IP:11434`.
 13. **Backups**: set `RESTIC_*`, run `sudo systemctl start homelab-backup` once, then test a
     restore of one file: `restic restore latest --target /tmp/t --include /etc/homelab`.

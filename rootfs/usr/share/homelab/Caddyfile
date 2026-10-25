@@ -41,8 +41,8 @@
 		reverse_proxy paperless:8000
 	}
 
-	@paperless-gpt host paperless-gpt.{$DOMAIN}
-	handle @paperless-gpt {
+	@sort host sort.{$DOMAIN}
+	handle @sort {
 		reverse_proxy paperless-gpt:8080
 	}
 
