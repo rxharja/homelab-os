@@ -41,6 +41,11 @@
 		reverse_proxy paperless:8000
 	}
 
+	@sort host sort.{$DOMAIN}
+	handle @sort {
+		reverse_proxy paperless-gpt:8080
+	}
+
 	handle {
 		respond "Not found" 404
 	}

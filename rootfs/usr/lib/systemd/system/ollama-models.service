@@ -1,5 +1,5 @@
 [Unit]
-Description=Pull the Ollama models listed in OLLAMA_MODELS
+Description=Pull the Ollama models listed in OLLAMA_MODELS, then build the repo's Modelfiles
 Requires=ollama.service
 After=ollama.service network-online.target
 
@@ -7,6 +7,8 @@ After=ollama.service network-online.target
 Type=oneshot
 EnvironmentFile=/etc/homelab/homelab.env
 ExecStart=/bin/sh -c 'for m in $OLLAMA_MODELS; do podman exec ollama ollama pull "$m" || echo "pull failed: $m"; done'
+# <name>.Modelfile becomes model <name>; create pulls the FROM base if missing.
+ExecStart=/bin/sh -c 'for f in /usr/share/homelab/ollama/*.Modelfile; do n=$$(basename "$$f" .Modelfile); podman exec ollama ollama create "$$n" -f "/modelfiles/$$n.Modelfile" || echo "create failed: $$n"; done'
 TimeoutStartSec=2h
 
 [Install]

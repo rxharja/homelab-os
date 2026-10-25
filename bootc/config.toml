@@ -6,7 +6,9 @@ text --non-interactive
 # Whole-disk install on the mini PC's NVMe. WIPES IT.
 zerombr
 clearpart --all --initlabel --disklabel=gpt
-autopart --nohome --noswap --type=plain
+# Explicit parts: autopart caps / at 70 GiB even with --nohome, stranding the rest of the disk.
+reqpart --add-boot
+part / --fstype=ext4 --grow
 network --bootproto=dhcp --device=link --activate --onboot=on --hostname=homelab
 timezone America/New_York --utc
 rootpw --lock
