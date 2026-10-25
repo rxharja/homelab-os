@@ -41,6 +41,11 @@
 		reverse_proxy paperless:8000
 	}
 
+	@paperless-gpt host paperless-gpt.{$DOMAIN}
+	handle @paperless-gpt {
+		reverse_proxy paperless-gpt:8080
+	}
+
 	handle {
 		respond "Not found" 404
 	}
