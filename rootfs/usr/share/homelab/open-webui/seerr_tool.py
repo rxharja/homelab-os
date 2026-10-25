@@ -1,13 +1,14 @@
 """
 title: Seerr
 description: Search Seerr, suggest titles we don't have, and request movies and shows.
-version: 0.1.0
+version: 0.1.1
 """
 
 # Install: Open WebUI > Workspace > Tools > + > paste this file, then set the API key valve.
 # Requests made with the API key are attributed to its owner (the Seerr admin) and auto-approved.
 
 import asyncio
+import re
 from urllib.parse import quote
 
 import aiohttp
@@ -45,6 +46,12 @@ def _title(result: dict) -> str:
     name = result.get("title") or result.get("name") or "?"
     date = result.get("releaseDate") or result.get("firstAirDate") or ""
     return f"{name} ({date[:4]})" if date else name
+
+
+def _summary(result: dict, limit: int = 200) -> str:
+    # Split only before a capital so abbreviations like "U.C. 0079" stay intact.
+    text = re.split(r"(?<=[.!?])\s+(?=[A-Z])", (result.get("overview") or "").strip())[0]
+    return text if len(text) <= limit else text[:limit].rsplit(" ", 1)[0] + "…"
 
 
 def _status(result: dict) -> str:
@@ -123,12 +130,12 @@ class Tools:
         """
         Suggest movies, shows or documentaries we don't have yet, by genre, topic, or similar to a title.
         Use for "suggest a documentary", "documentaries about the ocean", "something like Arrival", "a good 90s thriller".
-        Present only the titles this returns; never add titles from memory. Nature documentaries are often shows, so try media_type "tv" too.
+        Present only the titles this returns, described only by their summaries; never add titles, plot details or facts from memory. Nature documentaries are often shows, so try media_type "tv" too.
         After suggesting, let the user pick; request with request_media only when they ask.
         :param media_type: "movie" or "tv".
         :param genre: Genre such as documentary, comedy, thriller, sci-fi, horror, animation.
-        :param topic: Subject in one or two words, such as ocean, space, heist, world war 2.
-        :param like_title: A title to find similar recommendations for; overrides genre, topic and years.
+        :param topic: Subject, franchise or series in one or two words, such as ocean, heist, world war 2, gundam, star trek.
+        :param like_title: One specific title the user wants more like ("something like Arrival"); never a franchise name. Overrides genre, topic and years.
         :param exclude_genres: Genres to leave out, e.g. ["animation", "family"] for "nothing animated" or "not for kids".
         :param from_year: Earliest release year.
         :param to_year: Latest release year.
@@ -199,8 +206,8 @@ class Tools:
                 return "Nothing new matched; everything found is already available or requested."
             lines = [header]
             for r in fresh[:8]:
-                overview = (r.get("overview") or "").split(". ")[0][:140]
-                lines.append(f"- {_title(r)}, {r.get('voteAverage', 0):.1f}/10 ({r.get('voteCount', 0)} votes): {overview}")
+                lines.append(f"- {_title(r)}, {r.get('voteAverage', 0):.1f}/10 ({r.get('voteCount', 0)} votes): {_summary(r)}")
+            lines.append("(Summaries are as written; repeat or shorten them, never add details.)")
             return "\n".join(lines)
         except (SeerrError, aiohttp.ClientError) as err:
             return f"Seerr error: {err}"
