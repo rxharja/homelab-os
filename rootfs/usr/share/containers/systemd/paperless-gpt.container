@@ -11,7 +11,8 @@ Image=docker.io/icereed/paperless-gpt:latest
 AutoUpdate=registry
 ContainerName=paperless-gpt
 Network=homelab.network
-UserNS=auto
+# Entrypoint adds UID 10001 at runtime; auto sizing only sees the image's passwd.
+UserNS=auto:size=65536
 # PAPERLESS_API_TOKEN and PAPERLESS_PUBLIC_URL, rendered by homelab-render.
 EnvironmentFile=/var/lib/homelab/config/paperless-gpt/paperless-gpt.env
 Environment=PAPERLESS_BASE_URL=http://paperless:8000
