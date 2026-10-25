@@ -1,0 +1,36 @@
+# LLM titles/tags/correspondents and vision OCR for Paperless, on the shared
+# Ollama model. No built-in auth: LAN/tailnet only via Caddy.
+[Unit]
+Description=paperless-gpt (LLM tagging and OCR for Paperless)
+Requires=homelab-render.service
+After=homelab-render.service paperless.service ollama.service
+Wants=paperless.service ollama.service
+
+[Container]
+Image=docker.io/icereed/paperless-gpt:latest
+AutoUpdate=registry
+ContainerName=paperless-gpt
+Network=homelab.network
+UserNS=auto
+# PAPERLESS_API_TOKEN and PAPERLESS_PUBLIC_URL, rendered by homelab-render.
+EnvironmentFile=/var/lib/homelab/config/paperless-gpt/paperless-gpt.env
+Environment=PAPERLESS_BASE_URL=http://paperless:8000
+Environment=LLM_PROVIDER=ollama
+Environment=OLLAMA_HOST=http://ollama:11434
+# Same model as everything else, so Ollama keeps a single runner loaded.
+# Leave OLLAMA_CONTEXT_LENGTH/OLLAMA_KEEP_ALIVE unset: differing values force a reload.
+Environment=LLM_MODEL=qwen3-vl:8b-instruct
+Environment=VISION_LLM_PROVIDER=ollama
+Environment=VISION_LLM_MODEL=qwen3-vl:8b-instruct
+Environment=OCR_PROVIDER=llm
+# Stay under ollama.container's 16384 context, with room for the prompt and reply.
+Environment=TOKEN_LIMIT=12000
+Volume=/var/lib/homelab/appdata/paperless-gpt/prompts:/app/prompts:Z,U
+Volume=/var/lib/homelab/appdata/paperless-gpt/config:/app/config:Z,U
+Volume=/var/lib/homelab/appdata/paperless-gpt/db:/app/db:Z,U
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
