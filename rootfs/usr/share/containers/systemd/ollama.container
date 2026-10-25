@@ -24,6 +24,7 @@ Environment=OLLAMA_KEEP_ALIVE=-1
 # LAN-exposed WITHOUT auth so Neptune can use it. Never port-forward this.
 PublishPort=11434:11434
 Volume=/var/lib/homelab/appdata/ollama:/root/.ollama
+Volume=/usr/share/homelab/ollama:/modelfiles:ro
 
 [Service]
 Restart=always
