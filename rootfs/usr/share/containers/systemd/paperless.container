@@ -16,6 +16,11 @@ Volume=/var/lib/homelab/appdata/paperless/export:/usr/src/paperless/export:Z,U
 Volume=/var/lib/homelab/appdata/paperless/consume:/usr/src/paperless/consume:Z,U
 
 EnvironmentFile=/etc/homelab/homelab.env
+# Pocket ID login provider JSON, rendered by homelab-render.
+EnvironmentFile=/var/lib/homelab/config/paperless/paperless.env
+Environment=PAPERLESS_APPS=allauth.socialaccount.providers.openid_connect
+# Pocket ID users get an account on first login, with no permissions until granted.
+Environment=PAPERLESS_SOCIAL_AUTO_SIGNUP=true
 Environment=PAPERLESS_OCR_LANGUAGE=eng
 Environment=PAPERLESS_TIME_ZONE=America/New_York
 Environment=PAPERLESS_DBHOST=paperless-db

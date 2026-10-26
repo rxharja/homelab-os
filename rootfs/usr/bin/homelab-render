@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 # Renders the config that can't be static because it embeds a secret or DOMAIN:
 # riven.env (DB password), zurg's config.yml (RD token), paperless-gpt.env (API
-# token), pocket-id.env (APP_URL), open-webui.env and tinyauth.env (OIDC clients), caddy's
+# token), pocket-id.env (APP_URL), open-webui/tinyauth/paperless.env (OIDC clients), caddy's
 # id.DOMAIN network alias, the cf_api_token, riven_db_pw, pocket_id_encryption_key
 # and actual_password podman secrets, and the tailnet join. Everything else ships
 # in the image.
@@ -43,11 +43,21 @@ OPEN_WEBUI_OIDC_CLIENT_ID=${OPEN_WEBUI_OIDC_CLIENT_ID:-}
 OPEN_WEBUI_OIDC_CLIENT_SECRET=${OPEN_WEBUI_OIDC_CLIENT_SECRET:-}
 TINYAUTH_OIDC_CLIENT_ID=${TINYAUTH_OIDC_CLIENT_ID:-}
 TINYAUTH_OIDC_CLIENT_SECRET=${TINYAUTH_OIDC_CLIENT_SECRET:-}
+PAPERLESS_OIDC_CLIENT_ID=${PAPERLESS_OIDC_CLIENT_ID:-}
+PAPERLESS_OIDC_CLIENT_SECRET=${PAPERLESS_OIDC_CLIENT_SECRET:-}
+# jq builds the JSON so a secret can't break the quoting.
+PAPERLESS_SOCIALACCOUNT_PROVIDERS={}
+if [[ -n $PAPERLESS_OIDC_CLIENT_ID ]]; then
+  PAPERLESS_SOCIALACCOUNT_PROVIDERS=$(jq -cn --arg id "$PAPERLESS_OIDC_CLIENT_ID" \
+    --arg secret "$PAPERLESS_OIDC_CLIENT_SECRET" --arg url "https://id.$DOMAIN" \
+    '{openid_connect: {APPS: [{provider_id: "pocketid", name: "Pocket ID",
+      client_id: $id, secret: $secret, settings: {server_url: $url}}]}}')
+fi
 RIVEN_PLUGINS=${RIVEN_PLUGINS:-[\"seerr\",\"stremthru\",\"torrentio\",\"comet\",\"jellyfin\"]}
-export SEERR_API_KEY JELLYFIN_API_KEY PAPERLESS_API_TOKEN PAPERLESS_URL OPEN_WEBUI_OIDC_CLIENT_ID OPEN_WEBUI_OIDC_CLIENT_SECRET TINYAUTH_OIDC_CLIENT_ID TINYAUTH_OIDC_CLIENT_SECRET RIVEN_PLUGINS
+export SEERR_API_KEY JELLYFIN_API_KEY PAPERLESS_API_TOKEN PAPERLESS_URL OPEN_WEBUI_OIDC_CLIENT_ID OPEN_WEBUI_OIDC_CLIENT_SECRET TINYAUTH_OIDC_CLIENT_ID TINYAUTH_OIDC_CLIENT_SECRET PAPERLESS_SOCIALACCOUNT_PROVIDERS RIVEN_PLUGINS
 
 # Explicit variable list, so a stray $ in a template survives envsubst.
-VARS='${RD_TOKEN} ${TMDB_API_KEY} ${RIVEN_DB_PASSWORD} ${SEERR_API_KEY} ${JELLYFIN_API_KEY} ${PAPERLESS_API_TOKEN} ${PAPERLESS_URL} ${RIVEN_PLUGINS} ${DOMAIN} ${OPEN_WEBUI_OIDC_CLIENT_ID} ${OPEN_WEBUI_OIDC_CLIENT_SECRET} ${TINYAUTH_OIDC_CLIENT_ID} ${TINYAUTH_OIDC_CLIENT_SECRET}'
+VARS='${RD_TOKEN} ${TMDB_API_KEY} ${RIVEN_DB_PASSWORD} ${SEERR_API_KEY} ${JELLYFIN_API_KEY} ${PAPERLESS_API_TOKEN} ${PAPERLESS_URL} ${RIVEN_PLUGINS} ${DOMAIN} ${OPEN_WEBUI_OIDC_CLIENT_ID} ${OPEN_WEBUI_OIDC_CLIENT_SECRET} ${TINYAUTH_OIDC_CLIENT_ID} ${TINYAUTH_OIDC_CLIENT_SECRET} ${PAPERLESS_SOCIALACCOUNT_PROVIDERS}'
 render() { # template dest mode
   local tmp; tmp=$(mktemp)
   envsubst "$VARS" <"$SHARE/templates/$1" >"$tmp"
@@ -59,6 +69,7 @@ render paperless-gpt.env "$CFG/paperless-gpt/paperless-gpt.env" 0600
 render pocket-id.env    "$CFG/pocket-id/pocket-id.env"   0600
 render open-webui.env   "$CFG/open-webui/open-webui.env" 0600
 render tinyauth.env     "$CFG/tinyauth/tinyauth.env"     0600
+render paperless.env    "$CFG/paperless/paperless.env"   0600
 
 # Quadlet drop-in, so the generator must re-run before caddy starts (it is ordered after us).
 ALIAS=/run/containers/systemd/caddy.container.d/50-alias.conf
