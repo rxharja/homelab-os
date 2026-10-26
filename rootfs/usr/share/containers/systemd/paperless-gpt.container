@@ -24,6 +24,8 @@ Environment=LLM_MODEL=qwen3-vl:8b-instruct
 Environment=VISION_LLM_PROVIDER=ollama
 Environment=VISION_LLM_MODEL=qwen3-vl:8b-instruct
 Environment=OCR_PROVIDER=llm
+# Default 5 silently drops later pages from the OCR text; each page is ~0.5-1 min of Ollama time.
+Environment=OCR_LIMIT_PAGES=20
 # Defaults allow 40 MP pages, which overflow the context and crash the runner.
 Environment=IMAGE_MAX_PIXEL_DIMENSION=2048
 Environment=IMAGE_MAX_TOTAL_PIXELS=3145728

@@ -26,9 +26,10 @@ git push ──► GitHub Actions ──► ghcr.io/<you>/homelab-os:latest
 | Ollama (ROCm) | Local LLM on the 680M | `LAN_IP:11434` (Neptune) |
 | Open WebUI | Chat front end | `chat.DOMAIN` |
 | Paperless-ngx + Postgres + Redis | Document archive with OCR | `docs.DOMAIN` |
-| paperless-gpt | LLM titles, tags and OCR for Paperless (no auth) | `sort.DOMAIN` |
+| paperless-gpt | LLM titles, tags and OCR for Paperless (Pocket ID via Tinyauth) | `sort.DOMAIN` |
 | Actual Budget | Budgeting (YNAB-style envelopes) | `budget.DOMAIN` |
 | actual-ai | Nightly LLM categorization of new Actual transactions | internal |
+| Tinyauth | Pocket ID login in front of paperless-gpt and AdGuard | `auth.DOMAIN` |
 | Pocket ID | Passkey single sign-on (OIDC) for the other services | `id.DOMAIN` |
 | Cockpit | Web admin for host and containers | `https://LAN_IP:9090` (self-signed) |
 | Tailscale | Remote access, no port forwarding | tailnet |
