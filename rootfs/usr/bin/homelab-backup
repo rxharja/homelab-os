@@ -35,6 +35,8 @@ restic backup --tag homelab --host "${TS_HOSTNAME:-homelab}" \
   --exclude "$APP/riven/redis" \
   --exclude "$APP/paperless/db" \
   --exclude "$APP/paperless/redis" \
+  --exclude "$APP/paperless/data/hf_cache" \
+  --exclude "$APP/paperless/data/llm_index" \
   --exclude "$APP/ollama" \
   --exclude "$APP/riven/logs"
 

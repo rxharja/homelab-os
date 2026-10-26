@@ -21,6 +21,16 @@ Environment=PAPERLESS_TIME_ZONE=America/New_York
 Environment=PAPERLESS_DBHOST=paperless-db
 Environment=PAPERLESS_DBENGINE=postgresql
 Environment=PAPERLESS_REDIS=redis://paperless-redis:6379
+# Built-in document chat (top bar). Suggestions are on-demand only, so no overlap with paperless-gpt.
+Environment=PAPERLESS_AI_ENABLED=true
+Environment=PAPERLESS_AI_LLM_BACKEND=ollama
+Environment=PAPERLESS_AI_LLM_ENDPOINT=http://ollama:11434
+# Same model and context as everything else; Paperless sends num_ctx, and a mismatch forces a reload.
+Environment=PAPERLESS_AI_LLM_MODEL=qwen3-vl:8b-instruct
+Environment=PAPERLESS_AI_LLM_CONTEXT_SIZE=16384
+Environment=PAPERLESS_AI_LLM_REQUEST_TIMEOUT=300
+# Embeddings on CPU inside this container (all-MiniLM-L6-v2, cached in data/hf_cache), not a second Ollama model.
+Environment=PAPERLESS_AI_LLM_EMBEDDING_BACKEND=huggingface
 Secret=paperless_db_pw,type=env,target=PAPERLESS_DBPASS
 Secret=paperless_secret_key,type=env,target=PAPERLESS_SECRET_KEY
 
