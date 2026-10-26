@@ -19,7 +19,7 @@ Environment=OLLAMA_BASE_URL=http://ollama:11434/api
 # Same model as everything else, so Ollama keeps a single runner loaded.
 Environment=OLLAMA_MODEL=qwen3-vl:8b-instruct
 # 02:00, clear of the 03:30 backup that stops Actual.
-Environment=CLASSIFICATION_SCHEDULE_CRON=0 2 * * *
+Environment="CLASSIFICATION_SCHEDULE_CRON=0 2 * * *"
 
 [Service]
 Restart=always

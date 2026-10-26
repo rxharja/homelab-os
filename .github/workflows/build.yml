@@ -43,6 +43,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Lint shell scripts
         run: shellcheck -S warning rootfs/usr/bin/homelab-* scripts/export-devbox.sh
+      - name: Lint quadlets
+        run: |
+          sudo apt-get install -y podman
+          QUADLET_UNIT_DIRS=$PWD/rootfs/usr/share/containers/systemd /usr/libexec/podman/quadlet -dryrun >/dev/null
+          ! grep -nE '^Environment=[^"]* ' rootfs/usr/share/containers/systemd/*.container
       - uses: redhat-actions/buildah-build@v2
         id: build
         with:
