@@ -28,7 +28,11 @@
     `sudo systemctl restart homelab-render paperless-gpt`. Tag a document `paperless-gpt`
     to review suggestions at `sort.DOMAIN`, or `paperless-gpt-auto` to apply them.
 12. **Actual** (`budget.DOMAIN`): set the server password on first visit, then create or import a budget.
-    Bank sync (SimpleFIN/GoCardless) is optional, under Settings.
-13. **Neptune**: Jellyfin `https://jellyfin.DOMAIN` (or `http://LAN_IP:8096`), Ollama `http://LAN_IP:11434`.
-14. **Backups**: set `RESTIC_*`, run `sudo systemctl start homelab-backup` once, then test a
+    Bank sync (SimpleFIN/GoCardless) is optional, under Settings. Once the categories are
+    final (`scripts/suggest-categories.py` proposes a set), copy `examples/actual-ai.env` to
+    `/etc/homelab/actual-ai.env`, fill it in and `sudo systemctl start actual-ai`.
+13. **Pocket ID** (`id.DOMAIN`): `POCKET_ID_ENCRYPTION_KEY` must be set before boot. Open
+    `https://id.DOMAIN/setup` to create the admin and register a passkey, then invite the household.
+14. **Neptune**: Jellyfin `https://jellyfin.DOMAIN` (or `http://LAN_IP:8096`), Ollama `http://LAN_IP:11434`.
+15. **Backups**: set `RESTIC_*`, run `sudo systemctl start homelab-backup` once, then test a
     restore of one file: `restic restore latest --target /tmp/t --include /etc/homelab`.

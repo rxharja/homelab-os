@@ -2,8 +2,12 @@
 secrets.env
 *.secrets.env
 riven.extra.env
+actual-ai.env
 !rootfs/usr/share/homelab/examples/*
 # Guard: /etc/homelab in the image ships defaults (ranking.json) only.
 rootfs/etc/homelab/*.env
 homelab-export.tar.zst
 output/
+
+# suggest-categories.py output: personal payee data
+categories.json

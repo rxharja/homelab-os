@@ -1,7 +1,8 @@
 #!/usr/bin/bash
 # Renders the config that can't be static because it embeds a secret: riven.env
 # (DB password), zurg's config.yml (RD token), paperless-gpt.env (API token),
-# the cf_api_token and riven_db_pw podman secrets, and the tailnet join. Everything else ships in the image.
+# pocket-id.env (APP_URL), the cf_api_token, riven_db_pw and pocket_id_encryption_key
+# podman secrets, and the tailnet join. Everything else ships in the image.
 # Idempotent: runs every boot, safe to re-run by hand (then restart services).
 set -euo pipefail
 
@@ -25,7 +26,7 @@ set +a
 
 # DOMAIN/LAN_IP/ACME_EMAIL are unused below, but this runs before the
 # containers, so it's where a half-filled config gets caught.
-for v in DOMAIN LAN_IP ACME_EMAIL CF_API_TOKEN RD_TOKEN TMDB_API_KEY RIVEN_DB_PASSWORD PAPERLESS_DB_PASSWORD PAPERLESS_SECRET_KEY; do
+for v in DOMAIN LAN_IP ACME_EMAIL CF_API_TOKEN RD_TOKEN TMDB_API_KEY RIVEN_DB_PASSWORD PAPERLESS_DB_PASSWORD PAPERLESS_SECRET_KEY POCKET_ID_ENCRYPTION_KEY; do
   [[ -n ${!v:-} ]] || die "$v is not set in $ETC/{homelab,secrets}.env"
 done
 
@@ -40,7 +41,7 @@ RIVEN_PLUGINS=${RIVEN_PLUGINS:-[\"seerr\",\"stremthru\",\"torrentio\",\"comet\",
 export SEERR_API_KEY JELLYFIN_API_KEY PAPERLESS_API_TOKEN PAPERLESS_URL RIVEN_PLUGINS
 
 # Explicit variable list, so a stray $ in a template survives envsubst.
-VARS='${RD_TOKEN} ${TMDB_API_KEY} ${RIVEN_DB_PASSWORD} ${SEERR_API_KEY} ${JELLYFIN_API_KEY} ${PAPERLESS_API_TOKEN} ${PAPERLESS_URL} ${RIVEN_PLUGINS}'
+VARS='${RD_TOKEN} ${TMDB_API_KEY} ${RIVEN_DB_PASSWORD} ${SEERR_API_KEY} ${JELLYFIN_API_KEY} ${PAPERLESS_API_TOKEN} ${PAPERLESS_URL} ${RIVEN_PLUGINS} ${DOMAIN}'
 render() { # template dest mode
   local tmp; tmp=$(mktemp)
   envsubst "$VARS" <"$SHARE/templates/$1" >"$tmp"
@@ -49,6 +50,7 @@ render() { # template dest mode
 render zurg-config.yml  "$CFG/zurg/config.yml"   0600
 render riven.env        "$CFG/riven/riven.env"   0600
 render paperless-gpt.env "$CFG/paperless-gpt/paperless-gpt.env" 0600
+render pocket-id.env    "$CFG/pocket-id/pocket-id.env"   0600
 
 # Extra plugin settings (e.g. Comet), appended verbatim.
 if [[ -r $ETC/riven.extra.env ]]; then
@@ -63,6 +65,7 @@ printf %s "$CF_API_TOKEN"          | podman secret create --replace cf_api_token
 printf %s "$RIVEN_DB_PASSWORD"     | podman secret create --replace riven_db_pw - >/dev/null
 printf %s "$PAPERLESS_DB_PASSWORD" | podman secret create --replace paperless_db_pw - >/dev/null
 printf %s "$PAPERLESS_SECRET_KEY"  | podman secret create --replace paperless_secret_key - >/dev/null
+printf %s "$POCKET_ID_ENCRYPTION_KEY" | podman secret create --replace pocket_id_encryption_key - >/dev/null
 
 # Subnet routing needs ip_forward, set by sysctl.d/99-tailscale.conf.
 if [[ -n ${TS_AUTHKEY:-} ]] && command -v tailscale >/dev/null; then
