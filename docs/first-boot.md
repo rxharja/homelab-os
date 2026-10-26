@@ -34,6 +34,8 @@
     `sudo systemctl restart homelab-render && sudo systemctl start actual-ai`.
 13. **Pocket ID** (`id.DOMAIN`): `POCKET_ID_ENCRYPTION_KEY` must be set before boot. Open
     `https://id.DOMAIN/setup` to create the admin and register a passkey, then invite the household.
+    Open WebUI: Pocket ID > OIDC Clients > Add, callback `https://chat.DOMAIN/oauth/oidc/callback`,
+    then `OPEN_WEBUI_OIDC_CLIENT_ID`/`_SECRET` and `sudo systemctl restart homelab-render open-webui`.
 14. **Neptune**: Jellyfin `https://jellyfin.DOMAIN` (or `http://LAN_IP:8096`), Ollama `http://LAN_IP:11434`.
 15. **Backups**: set `RESTIC_*`, run `sudo systemctl start homelab-backup` once, then test a
     restore of one file: `restic restore latest --target /tmp/t --include /etc/homelab`.

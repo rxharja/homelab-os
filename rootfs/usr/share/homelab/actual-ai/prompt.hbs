@@ -1,0 +1,55 @@
+I want to categorize the given bank transaction.
+
+Transaction details:
+* Amount: {{amount}}
+* Type: {{type}}
+{{#if description}}
+* Description: {{description}}
+{{/if}}
+{{#if payee}}
+* Payee: {{payee}}
+{{^}}
+* Payee: {{importedPayee}}
+{{/if}}
+{{#if date}}
+* Date: {{date}}
+{{/if}}
+
+Existing categories by group:
+{{#each categoryGroups}}
+GROUP: {{name}} (ID: "{{id}}")
+{{#each categories}}
+* {{name}} (ID: "{{id}}")
+{{/each}}
+{{/each}}
+
+{{#if rules.length}}
+Existing Rules:
+{{#each rules}}
+{{incIndex @index}}. {{ruleName}} → {{categoryName}}
+   Conditions: {{#each conditions}}{{field}} {{op}} {{value}}{{#unless @last}}, {{/unless}}{{/each}}
+{{/each}}
+{{/if}}
+
+The category list above is fixed. Never invent a category. If nothing fits well, use the
+category named "Misc"; if there is no Misc, use the closest general category.
+
+IMPORTANT: You MUST respond with ONLY a valid JSON object using this structure:
+{
+  "type": "existing"|"rule",
+  "categoryId": "string", // Required for "existing"; for "rule" include only when the matched rule sets a category, omit when the rule says "leave uncategorized"
+  "ruleName": "string" // Required if matching rule
+}
+
+If a rule renders as "→ leave uncategorized", that rule explicitly tells you NOT to assign a category. Match it with type "rule" and the ruleName, and OMIT categoryId — do not invent one.
+
+DO NOT output any text before or after the JSON. Your entire response must be a valid, parsable JSON object.
+
+Examples:
+{"type": "existing", "categoryId": "abc123"}
+{"type": "rule", "categoryId": "def456", "ruleName": "Coffee Shop"}
+{"type": "rule", "ruleName": "Amazon leave uncategorized"}
+
+{{#if hasWebSearchTool}}
+You can use the web search tool to find more information about the transaction.
+{{/if}}

@@ -22,6 +22,10 @@ Environment=OLLAMA_BASE_URL=http://ollama:11434/api
 Environment=OLLAMA_MODEL=qwen3-vl:8b-instruct
 # 02:00, clear of the 03:30 backup that stops Actual.
 Environment="CLASSIFICATION_SCHEDULE_CRON=0 2 * * *"
+# Upstream prompt with the "new category" answer removed: with suggestNewCategories off,
+# those answers are dropped silently and the transaction is retried every night.
+# No :Z: /usr is read-only. container_t reads usr_t under enforcing SELinux.
+Volume=/usr/share/homelab/actual-ai/prompt.hbs:/opt/node_app/app/src/templates/prompt.hbs:ro
 
 [Service]
 Restart=always
