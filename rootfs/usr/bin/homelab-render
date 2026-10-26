@@ -1,8 +1,8 @@
 #!/usr/bin/bash
 # Renders the config that can't be static because it embeds a secret: riven.env
 # (DB password), zurg's config.yml (RD token), paperless-gpt.env (API token),
-# pocket-id.env (APP_URL), the cf_api_token, riven_db_pw and pocket_id_encryption_key
-# podman secrets, and the tailnet join. Everything else ships in the image.
+# pocket-id.env (APP_URL), the cf_api_token, riven_db_pw, pocket_id_encryption_key and
+# actual_password podman secrets, and the tailnet join. Everything else ships in the image.
 # Idempotent: runs every boot, safe to re-run by hand (then restart services).
 set -euo pipefail
 
@@ -66,6 +66,12 @@ printf %s "$RIVEN_DB_PASSWORD"     | podman secret create --replace riven_db_pw 
 printf %s "$PAPERLESS_DB_PASSWORD" | podman secret create --replace paperless_db_pw - >/dev/null
 printf %s "$PAPERLESS_SECRET_KEY"  | podman secret create --replace paperless_secret_key - >/dev/null
 printf %s "$POCKET_ID_ENCRYPTION_KEY" | podman secret create --replace pocket_id_encryption_key - >/dev/null
+# Optional: only actual-ai uses it, and podman refuses an empty secret.
+if [[ -n ${ACTUAL_PASSWORD:-} ]]; then
+  printf %s "$ACTUAL_PASSWORD" | podman secret create --replace actual_password - >/dev/null
+elif [[ -e $ETC/actual-ai.env ]]; then
+  log "NOTE: ACTUAL_PASSWORD empty: actual-ai won't start until you add it (docs/first-boot.md)"
+fi
 
 # Subnet routing needs ip_forward, set by sysctl.d/99-tailscale.conf.
 if [[ -n ${TS_AUTHKEY:-} ]] && command -v tailscale >/dev/null; then
