@@ -39,6 +39,9 @@
     Tinyauth (gates `sort.` and `adguard.`, locked until set): client callback
     `https://auth.DOMAIN/api/oauth/callback/pocketid`, then `TINYAUTH_OIDC_CLIENT_ID`/`_SECRET` and
     `sudo systemctl restart homelab-render tinyauth`.
+    Paperless: callback `https://docs.DOMAIN/accounts/oidc/pocketid/login/callback/`, then
+    `PAPERLESS_OIDC_CLIENT_ID`/`_SECRET`, `sudo systemctl restart homelab-render paperless`, and link
+    the existing admin under My Profile > Connect.
 14. **Neptune**: Jellyfin `https://jellyfin.DOMAIN` (or `http://LAN_IP:8096`), Ollama `http://LAN_IP:11434`.
 15. **Backups**: set `RESTIC_*`, run `sudo systemctl start homelab-backup` once, then test a
     restore of one file: `restic restore latest --target /tmp/t --include /etc/homelab`.
