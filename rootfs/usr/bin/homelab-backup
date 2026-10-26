@@ -23,7 +23,7 @@ podman exec paperless-db pg_dump -U paperless --clean --if-exists --no-owner pap
 mv "$APP/_dumps/paperless.sql.tmp" "$APP/_dumps/paperless.sql"
 
 # SQLite apps: stop briefly for a consistent copy, always restart.
-SQLITE_APPS=(seerr jellyfin open-webui paperless-gpt actual)
+SQLITE_APPS=(seerr jellyfin open-webui paperless-gpt actual pocket-id)
 restart() { systemctl start "${SQLITE_APPS[@]/%/.service}" || true; }
 trap restart EXIT
 systemctl stop "${SQLITE_APPS[@]/%/.service}"

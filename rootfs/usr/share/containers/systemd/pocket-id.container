@@ -1,0 +1,25 @@
+# Passkey-only OIDC provider for the other services' logins.
+[Unit]
+Description=Pocket ID (OIDC single sign-on)
+Requires=homelab-render.service
+After=homelab-render.service
+
+[Container]
+Image=ghcr.io/pocket-id/pocket-id:v2
+AutoUpdate=registry
+ContainerName=pocket-id
+Network=homelab.network
+# Entrypoint creates UID 1000 and chowns /app/data itself; alpine's nobody (65534) sizes the namespace.
+UserNS=auto
+# APP_URL, rendered by homelab-render.
+EnvironmentFile=/var/lib/homelab/config/pocket-id/pocket-id.env
+Environment=TRUST_PROXY=true
+Environment=ANALYTICS_DISABLED=true
+Secret=pocket_id_encryption_key,type=env,target=ENCRYPTION_KEY
+Volume=/var/lib/homelab/appdata/pocket-id:/app/data:Z,U
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

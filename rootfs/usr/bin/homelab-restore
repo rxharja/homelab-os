@@ -6,7 +6,7 @@ set -euo pipefail
 SNAP=${1:-latest}
 set -a; . /etc/homelab/secrets.env; set +a
 APP=/var/lib/homelab/appdata
-SERVICES=(caddy actual open-webui seerr jellyfin riven zurg-mount zurg riven-redis riven-db adguard paperless-gpt paperless paperless-db paperless-redis)
+SERVICES=(caddy pocket-id actual open-webui seerr jellyfin riven zurg-mount zurg riven-redis riven-db adguard paperless-gpt paperless paperless-db paperless-redis)
 
 read -rp "This overwrites $APP with snapshot '$SNAP'. Type yes: " ok
 [[ $ok == yes ]] || exit 1

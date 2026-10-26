@@ -43,5 +43,8 @@ qcow2: build      ## VM disk for a dry run in virt-manager/GNOME Boxes
 lint:
 	shellcheck -S warning rootfs/usr/bin/homelab-* scripts/export-devbox.sh
 	python3 -m json.tool rootfs/etc/homelab/ranking.json >/dev/null
+	# Unknown keys fail the generator; an unquoted value with spaces is silently cut at the first one.
+	QUADLET_UNIT_DIRS=$(CURDIR)/rootfs/usr/share/containers/systemd /usr/libexec/podman/quadlet -dryrun >/dev/null
+	! grep -nE '^Environment=[^"]* ' rootfs/usr/share/containers/systemd/*.container
 
 .PHONY: check-owner build caddy iso qcow2 lint
