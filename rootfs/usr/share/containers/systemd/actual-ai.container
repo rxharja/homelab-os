@@ -1,9 +1,10 @@
 # Nightly LLM categorization of uncategorized Actual transactions on the shared Ollama model.
-# Skipped until /etc/homelab/actual-ai.env exists (password, budget ID, FEATURES).
+# Skipped until /etc/homelab/actual-ai.env exists (budget ID, FEATURES); password is a secret.
 [Unit]
 Description=actual-ai (LLM transaction categorization for Actual)
 ConditionPathExists=/etc/homelab/actual-ai.env
-After=actual.service ollama.service
+Requires=homelab-render.service
+After=homelab-render.service actual.service ollama.service
 Wants=actual.service ollama.service
 
 [Container]
@@ -13,6 +14,7 @@ ContainerName=actual-ai
 Network=homelab.network
 UserNS=auto
 EnvironmentFile=/etc/homelab/actual-ai.env
+Secret=actual_password,type=env,target=ACTUAL_PASSWORD
 Environment=ACTUAL_SERVER_URL=http://actual:5006
 Environment=LLM_PROVIDER=ollama
 Environment=OLLAMA_BASE_URL=http://ollama:11434/api
