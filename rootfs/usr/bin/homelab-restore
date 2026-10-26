@@ -6,7 +6,7 @@ set -euo pipefail
 SNAP=${1:-latest}
 set -a; . /etc/homelab/secrets.env; set +a
 APP=/var/lib/homelab/appdata
-SERVICES=(caddy pocket-id actual open-webui seerr jellyfin riven zurg-mount zurg riven-redis riven-db adguard paperless-gpt paperless paperless-db paperless-redis)
+SERVICES=(caddy pocket-id actual-ai actual open-webui seerr jellyfin riven zurg-mount zurg riven-redis riven-db adguard paperless-gpt paperless paperless-db paperless-redis)
 
 read -rp "This overwrites $APP with snapshot '$SNAP'. Type yes: " ok
 [[ $ok == yes ]] || exit 1
@@ -16,6 +16,15 @@ systemctl stop "${SERVICES[@]/%/.service}" || true
 restic restore "$SNAP" --target /var/tmp/homelab-restore --include /etc/homelab
 restic restore "$SNAP" --target / --include "$APP"
 echo "Snapshot's /etc/homelab is in /var/tmp/homelab-restore/etc/homelab (diff it against yours)."
+
+# Pocket ID's data is encrypted with this key; a fresh secrets.env would lock everyone out.
+snap_key=$(set +u; . /var/tmp/homelab-restore/etc/homelab/secrets.env 2>/dev/null; echo "${POCKET_ID_ENCRYPTION_KEY:-}")
+cur_key=$(set +u; . /etc/homelab/secrets.env; echo "${POCKET_ID_ENCRYPTION_KEY:-}")
+if [[ -n $snap_key && $snap_key != "$cur_key" ]]; then
+  echo "POCKET_ID_ENCRYPTION_KEY differs from the snapshot's. Copy it from" >&2
+  echo "/var/tmp/homelab-restore/etc/homelab/secrets.env, then re-run. Services left stopped." >&2
+  exit 1
+fi
 
 # Snapshots older than an app have no dump for it; that app starts empty.
 for db in riven paperless; do
