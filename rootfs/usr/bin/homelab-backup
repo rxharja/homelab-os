@@ -38,6 +38,7 @@ restic backup --tag homelab --host "${TS_HOSTNAME:-homelab}" \
   --exclude "$APP/paperless/data/hf_cache" \
   --exclude "$APP/paperless/data/llm_index" \
   --exclude "$APP/ollama" \
+  --exclude "$APP/tinyauth" \
   --exclude "$APP/riven/logs"
 
 restart; trap - EXIT

@@ -5,6 +5,15 @@
 	email {$ACME_EMAIL}
 }
 
+# Pocket ID login (via Tinyauth) for apps without their own. Fails closed: if Tinyauth
+# is down or unconfigured, the route errors instead of opening up.
+(pocketid_gate) {
+	forward_auth tinyauth:3000 {
+		uri /api/auth/caddy
+		copy_headers Remote-User Remote-Email Remote-Groups
+	}
+}
+
 *.{$DOMAIN}, {$DOMAIN} {
 	tls {
 		dns cloudflare {env.CF_API_TOKEN}
@@ -18,6 +27,7 @@
 
 	@adguard host adguard.{$DOMAIN}
 	handle @adguard {
+		import pocketid_gate
 		reverse_proxy adguard:3000
 	}
 
@@ -43,12 +53,18 @@
 
 	@sort host sort.{$DOMAIN}
 	handle @sort {
+		import pocketid_gate
 		reverse_proxy paperless-gpt:8080
 	}
 
 	@budget host budget.{$DOMAIN}
 	handle @budget {
 		reverse_proxy actual:5006
+	}
+
+	@auth host auth.{$DOMAIN}
+	handle @auth {
+		reverse_proxy tinyauth:3000
 	}
 
 	@id host id.{$DOMAIN}

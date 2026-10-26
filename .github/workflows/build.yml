@@ -14,30 +14,13 @@ permissions:
 
 env:
   REGISTRY: ghcr.io/${{ github.repository_owner }}
+  BRANCH_TAG: ${{ github.ref_name == 'main' && 'latest' || 'testing' }}
+  # Scheduled/manual runs always rebuild for fresh base packages; pushes reuse an
+  # image already built from identical sources (e.g. testing merged into main).
+  FORCE_BUILD: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
 jobs:
-  caddy:
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-      - uses: redhat-actions/buildah-build@v2
-        id: build
-        with:
-          image: caddy-cloudflare
-          tags: ${{ github.ref_name == 'main' && 'latest' || 'testing' }} ${{ github.sha }}
-          context: images/caddy
-          containerfiles: images/caddy/Containerfile
-      - if: github.event_name != 'pull_request'
-        uses: redhat-actions/push-to-registry@v2
-        with:
-          image: ${{ steps.build.outputs.image }}
-          tags: ${{ steps.build.outputs.tags }}
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-  os:
-    needs: caddy
+  lint:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -48,15 +31,80 @@ jobs:
           sudo apt-get install -y podman
           QUADLET_UNIT_DIRS=$PWD/rootfs/usr/share/containers/systemd /usr/libexec/podman/quadlet -dryrun >/dev/null
           ! grep -nE '^Environment=[^"]* ' rootfs/usr/share/containers/systemd/*.container
-      - uses: redhat-actions/buildah-build@v2
+
+  caddy:
+    # PRs are lint-only: the branch push already built the same sources.
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - id: src
+        run: |
+          # Hash of images/caddy only: the OS repo changes far more often than caddy.
+          echo "tag=src-$(git rev-parse HEAD:images/caddy)" >>"$GITHUB_OUTPUT"
+          echo "repo=${REGISTRY,,}/caddy-cloudflare" >>"$GITHUB_OUTPUT"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | skopeo login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - id: reuse
+        run: |
+          if [[ $FORCE_BUILD != true ]] && skopeo inspect --raw "docker://${{ steps.src.outputs.repo }}:${{ steps.src.outputs.tag }}" >/dev/null 2>&1; then
+            echo "hit=true" >>"$GITHUB_OUTPUT"
+          fi
+      - name: Retag existing image
+        if: steps.reuse.outputs.hit == 'true'
+        run: |
+          for t in "$BRANCH_TAG" "$GITHUB_SHA"; do
+            skopeo copy --all "docker://${{ steps.src.outputs.repo }}:${{ steps.src.outputs.tag }}" "docker://${{ steps.src.outputs.repo }}:$t"
+          done
+      - if: steps.reuse.outputs.hit != 'true'
+        uses: redhat-actions/buildah-build@v2
+        id: build
+        with:
+          image: caddy-cloudflare
+          tags: ${{ env.BRANCH_TAG }} ${{ github.sha }} ${{ steps.src.outputs.tag }}
+          context: images/caddy
+          containerfiles: images/caddy/Containerfile
+      - if: steps.reuse.outputs.hit != 'true'
+        uses: redhat-actions/push-to-registry@v2
+        with:
+          image: ${{ steps.build.outputs.image }}
+          tags: ${{ steps.build.outputs.tags }}
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+  os:
+    needs: [lint, caddy]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - id: src
+        run: |
+          # Tree hash is identical for testing's head and the merge commit on main.
+          echo "tag=tree-$(git rev-parse 'HEAD^{tree}')" >>"$GITHUB_OUTPUT"
+          echo "repo=${REGISTRY,,}/homelab-os" >>"$GITHUB_OUTPUT"
+      - run: echo "${{ secrets.GITHUB_TOKEN }}" | skopeo login ghcr.io -u "${{ github.actor }}" --password-stdin
+      - id: reuse
+        run: |
+          if [[ $FORCE_BUILD != true ]] && skopeo inspect --raw "docker://${{ steps.src.outputs.repo }}:${{ steps.src.outputs.tag }}" >/dev/null 2>&1; then
+            echo "hit=true" >>"$GITHUB_OUTPUT"
+          fi
+      - name: Retag existing image
+        if: steps.reuse.outputs.hit == 'true'
+        run: |
+          for t in "$BRANCH_TAG" "$GITHUB_SHA"; do
+            skopeo copy --all "docker://${{ steps.src.outputs.repo }}:${{ steps.src.outputs.tag }}" "docker://${{ steps.src.outputs.repo }}:$t"
+          done
+      - if: steps.reuse.outputs.hit != 'true'
+        uses: redhat-actions/buildah-build@v2
         id: build
         with:
           image: homelab-os
-          tags: ${{ github.ref_name == 'main' && 'latest' || 'testing' }} ${{ github.sha }}
+          tags: ${{ env.BRANCH_TAG }} ${{ github.sha }} ${{ steps.src.outputs.tag }}
           containerfiles: Containerfile
           build-args: |
             IMAGE_OWNER=${{ github.repository_owner }}
-      - if: github.event_name != 'pull_request'
+      - if: steps.reuse.outputs.hit != 'true'
         uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ steps.build.outputs.image }}
