@@ -1,0 +1,19 @@
+# Budgeting. Browser needs HTTPS (SharedArrayBuffer), so use budget.DOMAIN via Caddy, not LAN_IP:5006.
+[Unit]
+Description=Actual Budget
+Requires=homelab-render.service
+After=homelab-render.service
+
+[Container]
+Image=docker.io/actualbudget/actual-server:latest
+AutoUpdate=registry
+ContainerName=actual
+Network=homelab.network
+UserNS=auto
+Volume=/var/lib/homelab/appdata/actual:/data:Z,U
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
