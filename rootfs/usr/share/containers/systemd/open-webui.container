@@ -12,6 +12,13 @@ Network=homelab.network
 UserNS=auto
 Environment=OLLAMA_BASE_URL=http://ollama:11434
 EnvironmentFile=/etc/homelab/homelab.env
+# OIDC client and URLs, rendered by homelab-render.
+EnvironmentFile=/var/lib/homelab/config/open-webui/open-webui.env
+Environment="OAUTH_PROVIDER_NAME=Pocket ID"
+# Pocket ID users get an account on first login (role from Admin > Settings > default role).
+Environment=ENABLE_OAUTH_SIGNUP=true
+# Links the existing local admin to its Pocket ID login; Pocket ID users are admin-created.
+Environment=OAUTH_MERGE_ACCOUNTS_BY_EMAIL=true
 Volume=/var/lib/homelab/appdata/open-webui:/app/backend/data:Z,U
 
 [Service]
