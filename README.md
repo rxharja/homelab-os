@@ -27,6 +27,7 @@ git push ──► GitHub Actions ──► ghcr.io/<you>/homelab-os:latest
 | Open WebUI | Chat front end | `chat.DOMAIN` |
 | Paperless-ngx + Postgres + Redis | Document archive with OCR | `docs.DOMAIN` |
 | paperless-gpt | LLM titles, tags and OCR for Paperless (no auth) | `sort.DOMAIN` |
+| Actual Budget | Budgeting (YNAB-style envelopes) | `budget.DOMAIN` |
 | Cockpit | Web admin for host and containers | `https://LAN_IP:9090` (self-signed) |
 | Tailscale | Remote access, no port forwarding | tailnet |
 | restic | Nightly backups 03:30 | n/a |

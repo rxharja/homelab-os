@@ -6,8 +6,8 @@ Requires=homelab-media-mount.service homelab-render.service riven-db.service riv
 After=homelab-media-mount.service homelab-render.service riven-db.service riven-redis.service
 
 [Container]
-Image=ghcr.io/rivenmedia/riven-ts:main
-AutoUpdate=registry
+# Pinned to sha-e94da58: undici 7.30.1 (from bec632b on) crash-loops on a client-h1 assertion.
+Image=ghcr.io/rivenmedia/riven-ts@sha256:1bc57b52f30fb535c233d7a382ff77a3a622045660cdc6a5a12be8e361c70cad
 ContainerName=riven
 Network=homelab.network
 AddCapability=SYS_ADMIN

@@ -46,6 +46,11 @@
 		reverse_proxy paperless-gpt:8080
 	}
 
+	@budget host budget.{$DOMAIN}
+	handle @budget {
+		reverse_proxy actual:5006
+	}
+
 	handle {
 		respond "Not found" 404
 	}

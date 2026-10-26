@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 # Quick health view.
-units=(homelab-render homelab-media-mount adguard caddy riven-db riven-redis riven jellyfin seerr ollama open-webui paperless paperless-redis paperless-db paperless-gpt tailscaled)
+units=(homelab-render homelab-media-mount adguard caddy riven-db riven-redis riven jellyfin seerr ollama open-webui paperless paperless-redis paperless-db paperless-gpt actual tailscaled)
 printf '%-22s %s\n' UNIT STATE
 for u in "${units[@]}"; do printf '%-22s %s\n' "$u" "$(systemctl is-active "$u.service" 2>/dev/null)"; done
 echo

@@ -7,6 +7,7 @@ version: 0.1.0
 # Install: Open WebUI > Workspace > Tools > + > paste this file. Re-paste after edits.
 # Talks to Riven's GraphQL API over homelab.network; it has no auth.
 
+import json
 from difflib import SequenceMatcher
 
 import aiohttp
@@ -121,7 +122,7 @@ def _entry(item: dict) -> str:
 class Tools:
     class Valves(BaseModel):
         riven_url: str = Field(
-            default="http://riven:3000/",
+            default="http://riven:3000/graphql",
             description="Riven GraphQL endpoint as seen from the Open WebUI container.",
         )
         max_streams: int = Field(default=8, description="Alternatives listed per request.")
@@ -135,7 +136,11 @@ class Tools:
             async with session.post(
                 self.valves.riven_url, json={"query": query, "variables": variables}
             ) as resp:
-                body = await resp.json(content_type=None)
+                text = await resp.text()
+        try:
+            body = json.loads(text)
+        except ValueError:
+            raise RivenError(f"HTTP {resp.status} from {self.valves.riven_url}: {text[:200]}")
         if body.get("errors"):
             raise RivenError("; ".join(e.get("message", "?") for e in body["errors"]))
         return body["data"]
