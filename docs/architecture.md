@@ -28,9 +28,9 @@ change is applied.
 ## Request → playback flow
 
 1. Neptune or a browser → **Seerr** request (auto-approved).
-2. **Riven** polls Seerr (60 s), scrapes **Torrentio / Comet**, ranks results with
+2. **Riven** polls Seerr (60 s), scrapes **Torrentio / Comet** (self-hosted), ranks results with
    `ranking.json` (remux > 4K DV/HDR10+ > TrueHD/Atmos), adds the pick to **Real-Debrid**
-   through **StremThru**.
+   through **StremThru** (self-hosted, on `homelab.network`).
 3. RivenVFS (FUSE inside the Riven container) exposes it at `/mount`, which propagates through
    an `rshared` bind to `/var/mnt/media/riven` on the host.
 4. **Jellyfin** sees `/var/mnt/media` at `/media` via `rslave`, so new and remounted FUSE trees

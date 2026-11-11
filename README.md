@@ -22,6 +22,7 @@ git push ──► GitHub Actions ──► ghcr.io/<you>/homelab-os:latest
 | Jellyfin | Media server (680M VAAPI) | `jellyfin.DOMAIN`, `LAN_IP:8096` |
 | Seerr | Requests and discovery | `seerr.DOMAIN` |
 | Riven + Postgres + Redis | Requests → scrape → Real-Debrid → FUSE library | internal |
+| StremThru + Comet | Riven's debrid proxy and scraper, self-hosted | internal |
 | Zurg + rclone | Whole RD library (DMM hand-picks) at `/var/mnt/media/zurg` | internal |
 | Ollama (ROCm) | Local LLM on the 680M | `LAN_IP:11434` (Neptune) |
 | Open WebUI | Chat front end | `chat.DOMAIN` |

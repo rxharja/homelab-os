@@ -1,0 +1,31 @@
+# Self-hosted Comet scraper for Riven. Sources are public scrapers; Comet caches
+# their results locally. Override with a drop-in in /etc/containers/systemd/comet.container.d/.
+[Unit]
+Description=Comet (torrent scraper for Riven)
+After=homelab-render.service stremthru.service
+Requires=homelab-render.service
+
+[Container]
+Image=docker.io/g0ldyy/comet:latest
+AutoUpdate=registry
+ContainerName=comet
+Network=homelab.network
+UserNS=auto
+RunInit=true
+ReadOnly=true
+Tmpfs=/tmp
+Environment=DATABASE_TYPE=sqlite
+Environment=STREMTHRU_URL=http://stremthru:8080
+Environment=STREMTHRU_SCRAPE_URL=http://stremthru:8080
+Environment=SCRAPE_STREMTHRU=live
+Environment=SCRAPE_ZILEAN=live
+Environment=SCRAPE_MEDIAFUSION=live
+Environment=SCRAPE_NYAA=live
+Environment=SCRAPE_ANIMETOSHO=live
+Volume=/var/lib/homelab/appdata/comet:/app/data:Z,U
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

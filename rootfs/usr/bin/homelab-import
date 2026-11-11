@@ -32,7 +32,7 @@ if [[ -f $WORK/riven.sql ]]; then
   cp "$WORK/riven.sql" "$APP/_dumps/riven.sql"
 fi
 [[ -f $WORK/riven.env.devbox ]] && install -m 600 "$WORK/riven.env.devbox" /etc/homelab/riven.env.devbox \
-  && echo "dev box .env.riven saved to /etc/homelab/riven.env.devbox: copy COMET lines into riven.extra.env"
+  && echo "dev box .env.riven saved to /etc/homelab/riven.env.devbox: Comet is self-hosted now, don't copy its URL"
 
 rm -rf "$WORK"
 systemctl restart homelab-render.service
