@@ -14,9 +14,6 @@ scp ~/homelab-export.tar.zst homelab@LAN_IP:
 
 ```bash
 sudo homelab-import ~/homelab-export.tar.zst
-sudo grep COMET /etc/homelab/riven.env.devbox | sudo tee /etc/homelab/riven.extra.env
-sudo chmod 600 /etc/homelab/riven.extra.env
-sudo systemctl restart homelab-render riven
 sudo homelab-status
 rm ~/homelab-export.tar.zst          # it contains secrets
 ```

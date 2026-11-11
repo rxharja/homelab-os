@@ -17,7 +17,7 @@
 7. **Seerr** (`seerr.DOMAIN`): sign in with Jellyfin (host `jellyfin`, port `8096`), external
    URL `https://jellyfin.DOMAIN`, TV/Anime metadata = TVDB, auto-approve on.
    Settings → General → API key → `SEERR_API_KEY`.
-8. **Comet**: put its settings in `/etc/homelab/riven.extra.env`.
+8. **Comet / StremThru** are self-hosted (`comet.container`, `stremthru.container`); nothing to set.
 9. `sudo systemctl restart homelab-render riven` and request something.
 10. **Open WebUI** (`chat.DOMAIN`): first account = admin, then disable signups in Admin settings.
     Turn off tools for the small models (that was the `create_tasks` junk).

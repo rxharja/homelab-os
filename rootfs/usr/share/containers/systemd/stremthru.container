@@ -1,0 +1,24 @@
+# Self-hosted, so Riven's RD calls don't depend on the public instance (it
+# started answering 451). No STREMTHRU_AUTH: internal only, Riven sends its RD
+# token per request.
+[Unit]
+Description=StremThru (debrid store proxy for Riven)
+After=homelab-render.service
+Requires=homelab-render.service
+
+[Container]
+Image=docker.io/muniftanjim/stremthru:latest
+AutoUpdate=registry
+ContainerName=stremthru
+Network=homelab.network
+UserNS=auto
+Environment=STREMTHRU_BASE_URL=http://stremthru:8080
+# Torrent index still peers with the public instance; lazy keeps its outages off the request path.
+Environment=STREMTHRU_PEER_FLAG=lazy
+Volume=/var/lib/homelab/appdata/stremthru:/app/data:Z,U
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
