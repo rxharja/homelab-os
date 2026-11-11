@@ -18,6 +18,9 @@ Environment=DATABASE_TYPE=sqlite
 Environment=STREMTHRU_URL=http://stremthru:8080
 Environment=STREMTHRU_SCRAPE_URL=http://stremthru:8080
 Environment=SCRAPE_STREMTHRU=live
+# The public instance as one source among several, not a dependency.
+Environment=SCRAPE_COMET=live
+Environment=COMET_URL=https://comet.feels.legal
 Environment=SCRAPE_ZILEAN=live
 Environment=SCRAPE_MEDIAFUSION=live
 Environment=SCRAPE_NYAA=live
